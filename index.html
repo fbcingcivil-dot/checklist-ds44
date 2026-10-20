@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16305C">
+<title>Checklist DS 44</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* Layout: una columna para el celular, barra superior fija con avance, tarjetas por requisito agrupadas por sección */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --fg:#152238; --muted:#5B6678; --line:#D9DFE8;
+  --brand:#16305C; --brand-soft:#E3EAF5; --teal:#1F8A8A;
+  --ok:#1E7B45; --ok-soft:#E1F2E8; --bad:#B42828; --bad-soft:#F8E3E3; --na:#5B6678; --na-soft:#E8EBF0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --radius:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4;
+  --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4;
+  --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;align-items:center;gap:12px}
+.logo{height:30px;width:auto;flex:none;background:#fff;border-radius:4px;padding:2px 4px}
+.ttl{flex:1;min-width:0}
+.ttl b{font-family:var(--display);font-size:20px;letter-spacing:.02em;color:var(--brand);display:block;line-height:1.05}
+.ttl span{font-size:13px;color:var(--muted)}
+.score{text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.score b{font-family:var(--display);font-size:24px;display:block;line-height:1}
+.score span{font-size:12px;color:var(--muted)}
+.prog{height:4px;background:var(--line)}
+.prog i{display:block;height:100%;width:0;background:var(--teal);transition:width .25s}
+h2{font-family:var(--display);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px;display:flex;justify-content:space-between;gap:8px}
+h2 small{font-family:var(--body);letter-spacing:0;text-transform:none;font-weight:500;font-variant-numeric:tabular-nums}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600;min-width:0}
+input,select,textarea{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:64px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.items{display:grid;gap:10px}
+.item{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--radius);padding:12px 12px 12px 12px;display:grid;gap:10px}
+.item[data-r="c"]{border-left-color:var(--ok)}
+.item[data-r="n"]{border-left-color:var(--bad)}
+.item[data-r="na"]{border-left-color:var(--na)}
+.q{display:grid;grid-template-columns:auto 1fr;gap:10px}
+.num{font-family:var(--display);font-size:20px;color:var(--brand);font-variant-numeric:tabular-nums;min-width:24px}
+.q p{margin:0;font-weight:600;min-width:0}
+.q .hint{font-weight:400;font-size:14px;color:var(--muted);margin-top:4px}
+.art{font-size:12px;color:var(--teal);font-weight:600;letter-spacing:.03em}
+.seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.seg button{font:inherit;font-weight:600;font-size:15px;padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;min-height:46px}
+.seg button[aria-pressed="true"][data-v="c"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.seg button[aria-pressed="true"][data-v="n"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.seg button[aria-pressed="true"][data-v="na"]{background:var(--na-soft);border-color:var(--na);color:var(--na)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.lnk{font:inherit;font-size:14px;font-weight:600;color:var(--brand);background:none;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.lnk.on{border-style:solid;background:var(--brand-soft)}
+.photos{display:flex;gap:6px;flex-wrap:wrap}
+.photos figure{margin:0;position:relative}
+.photos img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.photos button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:none;background:var(--bad);color:#fff;font-weight:700;cursor:pointer;line-height:1}
+.status{font-size:13px;color:var(--muted)}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-variant-numeric:tabular-nums}
+.sum div{border-radius:8px;padding:8px 4px;background:var(--bg)}
+.sum b{font-family:var(--display);font-size:24px;display:block}
+.sum span{font-size:12px;color:var(--muted)}
+.sum .c b{color:var(--ok)} .sum .n b{color:var(--bad)}
+.find{margin:0;padding-left:20px;display:grid;gap:4px;font-size:15px}
+.btns{display:grid;gap:8px}
+.btn{font:inherit;font-weight:700;font-size:16px;padding:13px;border-radius:9px;border:1px solid var(--brand);background:var(--brand);color:var(--surface);cursor:pointer}
+.btn.sec{background:transparent;color:var(--brand)}
+.btn:disabled{opacity:.5;cursor:default}
+.hist{display:grid;gap:8px}
+.hist button{font:inherit;text-align:left;display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.hist .pct{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+.confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+:root{padding-top:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+[hidden]{display:none!important}
+.row{display:flex;gap:8px;align-items:center}
+.hist .item2{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:stretch}
+.hist .del{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--bad);border-radius:8px;padding:0 10px;cursor:pointer}
+.install{margin-top:14px}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="in">
+    <img class="logo" src="logo.png" alt="Elis">
+    <div class="ttl"><b>CHECKLIST DS 44</b><span id="hdrPlanta">Visita a planta</span></div>
+    <div class="score"><b id="pct">–</b><span id="cnt">0 de 20</span></div>
+  </div>
+  <div class="prog"><i id="bar"></i></div>
+</header>
+
+<main class="wrap">
+  <button class="btn sec install" id="install" type="button" hidden>Instalar como app en este teléfono</button>
+
+  <h2>Datos de la visita</h2>
+  <div class="panel">
+    <div class="grid2">
+      <label class="f">Planta
+        <select id="planta">
+          <option value="">Elegir…</option>
+          <option>Juan Elías (Recoleta)</option>
+          <option>Santa Margarita</option>
+          <option>Cerrillos</option>
+          <option>Ropería Buzeta</option>
+          <option>Valparaíso</option>
+          <option>Concepción</option>
+          <option>Temuco</option>
+          <option>Puerto Montt</option>
+          <option>Calama</option>
+          <option>San Francisco</option>
+          <option value="__otra">Otra…</option>
+        </select>
+      </label>
+      <label class="f" id="otraWrap" hidden>Nombre de la planta<input id="otra" type="text" autocomplete="off"></label>
+      <label class="f">Fecha<input id="fecha" type="date"></label>
+      <label class="f">Evaluador<input id="evaluador" type="text" autocomplete="name"></label>
+      <label class="f">Contraparte en planta<input id="contraparte" type="text" placeholder="Jefe de planta / supervisor"></label>
+      <label class="f">Dotación de la planta<input id="dotacion" type="number" inputmode="numeric" min="0" placeholder="N° trabajadores"></label>
+    </div>
+    <p class="status" id="dotHint"></p>
+  </div>
+
+  <div id="sections"></div>
+
+  <h2>Resumen</h2>
+  <div class="panel">
+    <div class="sum">
+      <div class="c"><b id="sC">0</b><span>Cumple</span></div>
+      <div class="n"><b id="sN">0</b><span>No cumple</span></div>
+      <div><b id="sNA">0</b><span>No aplica</span></div>
+      <div><b id="sP">20</b><span>Pendientes</span></div>
+    </div>
+    <div>
+      <strong>Hallazgos (no cumple)</strong>
+      <ol class="find" id="findings"></ol>
+      <p class="empty" id="noFind">Sin hallazgos registrados.</p>
+    </div>
+    <label class="f">Comentario general<textarea id="general" placeholder="Observaciones generales de la visita"></textarea></label>
+    <div class="btns">
+      <button class="btn" id="share" type="button">Compartir informe PDF</button>
+      <button class="btn sec" id="pdf" type="button">Descargar informe PDF</button>
+      <button class="btn sec" id="save" type="button">Guardar en el historial</button>
+      <button class="btn sec" id="copy" type="button">Copiar resumen (texto)</button>
+      <button class="btn sec" id="csv" type="button">Descargar Excel (CSV)</button>
+      <button class="btn sec" id="reset" type="button">Nueva evaluación</button>
+      <div class="confirm" id="resetConfirm" hidden>¿Empezar una nueva? Lo no guardado en el historial se pierde.
+        <button class="lnk" id="resetYes" type="button">Sí, empezar de nuevo</button>
+        <button class="lnk" id="resetNo" type="button">Cancelar</button>
+      </div>
+    </div>
+    <p class="status" id="saveStatus">Todo queda guardado en este teléfono mientras llenas, aunque no haya señal.</p>
+  </div>
+
+  <h2>Historial en este teléfono</h2>
+  <div class="hist" id="hist"></div>
+</main>
+<textarea id="copyBox" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px"></textarea>
+
+<script src="jspdf.umd.min.js"></script>
+<script src="jspdf.plugin.autotable.min.js"></script>
+<script>
+const SECTIONS = [
+ {t:"MIPER y programa", items:[
+  {q:"MIPER de la planta cubre todos los procesos y puestos, y fue revisada en los últimos 12 meses", h:"Ver fecha de la matriz y contrastar con lo que se hace en terreno (lavado, secado, calandras, despacho).", a:"Art. 7"},
+  {q:"La MIPER incluye riesgos ergonómicos, psicosociales, violencia y acoso, con enfoque de género", h:"Buscar estas filas en la matriz, no solo riesgos de seguridad.", a:"Art. 7"},
+  {q:"La MIPER está disponible en la planta y la conocen jefaturas y Comité o Delegado", h:"Preguntar a un supervisor dónde está y cuáles son los riesgos principales de su área.", a:"Art. 7"},
+  {q:"Programa de trabajo preventivo escrito, aprobado por el representante legal y difundido", h:"Medidas con plazos y responsables. Debe salir de la MIPER (30 días).", a:"Art. 8"}
+ ]},
+ {t:"Máquinas y EPP", items:[
+  {q:"Las máquinas tienen procedimiento de trabajo seguro e información disponible para quien las opera", h:"Revisar calandras, lavadoras, secadoras y prensas. Preguntar al operador.", a:"Art. 10"},
+  {q:"EPP entregado sin costo y adecuado al riesgo, con registro de entrega firmado", h:"Revisar 2 o 3 registros al azar contra lo que se usa en terreno.", a:"Art. 13"},
+  {q:"EPP certificado o con registro en el ISP", h:"Mirar la marca de certificación en 2 o 3 EPP en uso.", a:"Art. 13"},
+  {q:"Capacitación en uso y mantención de EPP (mínimo 1 hora) con registro", h:"Lista de asistencia con contenido y relator.", a:"Art. 13"}
+ ]},
+ {t:"Información y capacitación", items:[
+  {q:"Trabajadores informados de sus riesgos antes de empezar, con registro firmado (incluye ingresos recientes)", h:"Pedir 3 carpetas, al menos una de un ingreso reciente.", a:"Art. 15"},
+  {q:"Capacitación SST de al menos 8 horas en los últimos 2 años, con registro", h:"Programa, asistencia y evaluación.", a:"Art. 16"}
+ ]},
+ {t:"Emergencias", items:[
+  {q:"Plan de emergencias de la planta vigente, con roles definidos y vías de evacuación señalizadas", h:"Recorrer vías y salidas: despejadas y señalizadas.", a:"Art. 19"},
+  {q:"Simulacro realizado en los últimos 12 meses, con registro", h:"Informe o acta del simulacro con fecha.", a:"Art. 19"},
+  {q:"Los trabajadores saben qué hacer ante un riesgo grave e inminente (detener y evacuar)", h:"Preguntar a 2 trabajadores de distintas áreas.", a:"Art. 18"}
+ ]},
+ {t:"Participación y contratistas", items:[
+  {q:"Comité Paritario (más de 25 trabajadores) o Delegado SST (10 a 25) constituido y vigente", h:"Acta de constitución o elección. No aplica bajo 10 trabajadores.", a:"Arts. 23 y 66"},
+  {q:"El Comité o Delegado sesiona y deja actas con acuerdos y plazos", h:"Revisar las últimas 3 actas.", a:"Art. 39"},
+  {q:"Coordinación con contratistas que trabajan en la planta (inducción, permisos, registro)", h:"Ver registro de ingreso e inducción del último contratista.", a:"Art. 20"}
+ ]},
+ {t:"Terreno y seguimiento", items:[
+  {q:"Mapa de riesgos visible y actualizado", h:"Debe mostrar el esquema de la planta y los riesgos principales.", a:"Art. 62"},
+  {q:"Trabajadores expuestos (ruido, calor, químicos) incluidos en vigilancia ambiental y de salud", h:"Pedir nómina de expuestos y último informe del organismo administrador.", a:"Art. 67"},
+  {q:"Accidentes de los últimos 12 meses investigados, con medidas implementadas", h:"Tomar 1 o 2 casos y verificar la medida en terreno.", a:"Art. 71"},
+  {q:"RIOHS entregado a los trabajadores, con registro de entrega", h:"Revisar 3 registros de entrega, incluido un ingreso reciente.", a:"Art. 56"}
+ ]}
+];
+
+const ITEMS = []; SECTIONS.forEach(s=>s.items.forEach(it=>ITEMS.push({...it,s:s.t})));
+const N = ITEMS.length;
+const LABEL = {c:"Cumple",n:"No cumple",na:"No aplica"};
+const $ = id => document.getElementById(id);
+
+/* ---------- almacenamiento local (IndexedDB) ---------- */
+const DB = (()=>{ let p; const open=()=>p||(p=new Promise((res,rej)=>{ const r=indexedDB.open("ds44",1); r.onupgradeneeded=()=>{ r.result.createObjectStore("kv"); r.result.createObjectStore("evals"); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }));
+  const tx=(store,mode,fn)=>open().then(db=>new Promise((res,rej)=>{ const t=db.transaction(store,mode); const s=t.objectStore(store); const out=fn(s); t.oncomplete=()=>res(out&&out.result); t.onerror=()=>rej(t.error); }));
+  return { get:(st,k)=>tx(st,"readonly",s=>s.get(k)), put:(st,k,v)=>tx(st,"readwrite",s=>s.put(v,k)), del:(st,k)=>tx(st,"readwrite",s=>s.delete(k)), all:st=>tx(st,"readonly",s=>s.getAll()) }; })();
+
+let state = blank();
+function today(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function blank(){ return {id:null, planta:"", otra:"", fecha:today(), evaluador:(lastEval()||"Francisco Bravo"), contraparte:"", dotacion:"", general:"", r:Array(N).fill(null), obs:Array(N).fill(""), fotos:Array.from({length:N},()=>[])}; }
+function lastEval(){ try{ return localStorage.getItem("ds44-evaluador"); }catch(e){ return null; } }
+let draftT; function saveDraft(){ clearTimeout(draftT); draftT=setTimeout(()=>{ DB.put("kv","draft",state).catch(()=>{}); try{ localStorage.setItem("ds44-evaluador",state.evaluador||""); }catch(e){} },300); }
+function plantaName(){ return state.planta==="__otra" ? (state.otra||"Otra planta") : state.planta; }
+function fmtDate(s){ if(!s) return ""; const [y,m,d]=s.split("-"); return `${d}-${m}-${y}`; }
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
+
+/* ---------- interfaz ---------- */
+function build(){
+  const root=$("sections"); let i=0; root.textContent="";
+  SECTIONS.forEach(s=>{
+    const h=document.createElement("h2"); h.innerHTML=`<span></span><small></small>`; h.firstChild.textContent=s.t; h.dataset.s=s.t; root.appendChild(h);
+    const box=document.createElement("div"); box.className="items"; root.appendChild(box);
+    s.items.forEach(it=>{
+      const k=i++; const el=document.createElement("div"); el.className="item"; el.id="it"+k;
+      el.innerHTML=`<div class="q"><span class="num">${k+1}</span><div><p></p><div class="hint"></div><div class="art"></div></div></div>
+        <div class="seg" role="group" aria-label="Resultado">
+          <button type="button" data-v="c" aria-pressed="false">Cumple</button>
+          <button type="button" data-v="n" aria-pressed="false">No cumple</button>
+          <button type="button" data-v="na" aria-pressed="false">N/A</button>
+        </div>
+        <div class="tools"><button type="button" class="lnk obsBtn">+ Observación</button><button type="button" class="lnk fotoBtn">+ Foto</button><input type="file" accept="image/*" capture="environment" hidden id="f${k}"></div>
+        <textarea id="o${k}" placeholder="Evidencia revisada, hallazgo o compromiso" hidden></textarea>
+        <div class="photos"></div>`;
+      el.querySelector("p").textContent=it.q; el.querySelector(".hint").textContent=it.h; el.querySelector(".art").textContent="DS 44 · "+it.a;
+      el.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{ state.r[k]= state.r[k]===b.dataset.v ? null : b.dataset.v; if(state.r[k]==="n") showObs(k,true); render(); saveDraft(); }));
+      el.querySelector(".obsBtn").addEventListener("click",()=>showObs(k,true,true));
+      const ta=el.querySelector("textarea"); ta.addEventListener("input",()=>{ state.obs[k]=ta.value; renderSummary(); saveDraft(); });
+      const fi=el.querySelector("input[type=file]"); el.querySelector(".fotoBtn").addEventListener("click",()=>fi.click());
+      fi.addEventListener("change",async()=>{ const f=fi.files[0]; fi.value=""; if(!f) return; try{ state.fotos[k].push({url:await shrink(f)}); render(); saveDraft(); }catch(e){ toast("No se pudo agregar la foto"); } });
+      box.appendChild(el);
+    });
+  });
+}
+function showObs(k,show,focus){ const ta=$("o"+k); ta.hidden=!show; $("it"+k).querySelector(".obsBtn").classList.toggle("on",show); if(focus) ta.focus(); }
+const FIELDS=["planta","otra","fecha","evaluador","contraparte","dotacion","general"];
+function render(){
+  FIELDS.forEach(f=>{ if(document.activeElement!==$(f)) $(f).value=state[f]??""; });
+  $("otraWrap").hidden = state.planta!=="__otra";
+  ITEMS.forEach((_,k)=>{
+    const el=$("it"+k); el.dataset.r=state.r[k]||"";
+    el.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===state.r[k])));
+    const ta=$("o"+k); if(document.activeElement!==ta) ta.value=state.obs[k]; if(state.obs[k]) showObs(k,true);
+    const ph=el.querySelector(".photos"); ph.textContent="";
+    state.fotos[k].forEach((f,j)=>{ const fig=document.createElement("figure"); const img=document.createElement("img"); img.src=f.url; img.alt="Foto requisito "+(k+1); const x=document.createElement("button"); x.type="button"; x.textContent="×"; x.setAttribute("aria-label","Quitar foto"); x.addEventListener("click",()=>{ state.fotos[k].splice(j,1); render(); saveDraft(); }); fig.append(img,x); ph.appendChild(fig); });
+  });
+  document.querySelectorAll("#sections h2").forEach(h=>{ const its=ITEMS.map((it,k)=>it.s===h.dataset.s?k:-1).filter(k=>k>=0); h.lastChild.textContent=its.filter(k=>state.r[k]).length+"/"+its.length; });
+  renderSummary();
+}
+function counts(){ const c=state.r.filter(x=>x==="c").length, n=state.r.filter(x=>x==="n").length, na=state.r.filter(x=>x==="na").length; return {c,n,na,p:N-c-n-na,pct:(c+n)?Math.round(100*c/(c+n)):null}; }
+function renderSummary(){
+  const s=counts();
+  $("pct").textContent = s.pct==null?"–":s.pct+"%"; $("cnt").textContent=(N-s.p)+" de "+N; $("bar").style.width=(100*(N-s.p)/N)+"%";
+  $("sC").textContent=s.c; $("sN").textContent=s.n; $("sNA").textContent=s.na; $("sP").textContent=s.p;
+  $("hdrPlanta").textContent = plantaName() ? plantaName()+" · "+fmtDate(state.fecha) : "Visita a planta";
+  const ol=$("findings"); ol.textContent="";
+  ITEMS.forEach((it,k)=>{ if(state.r[k]==="n"){ const li=document.createElement("li"); li.textContent=`#${k+1} ${it.q}`+(state.obs[k]?` — ${state.obs[k]}`:""); ol.appendChild(li);} });
+  $("noFind").hidden = s.n>0;
+  const d=parseInt(state.dotacion,10);
+  $("dotHint").textContent = isNaN(d) ? "La dotación define si corresponde Comité Paritario (más de 25) o Delegado SST (10 a 25)." : d>25 ? "Con "+d+" trabajadores corresponde Comité Paritario." : d>=10 ? "Con "+d+" trabajadores corresponde Delegado SST (si no hay Comité)." : "Con menos de 10 trabajadores no se exige Comité ni Delegado: marca N/A en 14 y 15.";
+}
+FIELDS.forEach(f=>$(f).addEventListener("input",()=>{ state[f]=$(f).value; if(f==="planta") render(); else renderSummary(); saveDraft(); }));
+
+function shrink(file){ return new Promise((res,rej)=>{ const img=new Image(); const u=URL.createObjectURL(file); img.onload=()=>{ const m=1280, sc=Math.min(1,m/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); res(c.toDataURL("image/jpeg",.78)); }; img.onerror=()=>rej(); img.src=u; }); }
+
+/* ---------- salidas ---------- */
+function fileBase(){ return (plantaName()||"planta").replace(/[^\wÁÉÍÓÚáéíóúÑñ]+/g,"_")+"_"+state.fecha; }
+function summaryText(){
+  const s=counts(); const L=[];
+  L.push(`CHECKLIST DS 44 – ${plantaName()||"Planta sin indicar"}`);
+  L.push(`Fecha: ${fmtDate(state.fecha)} · Evaluador: ${state.evaluador||"-"}`+(state.contraparte?` · Contraparte: ${state.contraparte}`:""));
+  if(state.dotacion) L.push(`Dotación: ${state.dotacion}`);
+  L.push(`Cumplimiento: ${s.pct==null?"-":s.pct+"%"} (Cumple ${s.c} · No cumple ${s.n} · N/A ${s.na}`+(s.p?` · Pendientes ${s.p}`:"")+")");
+  L.push(""); L.push("HALLAZGOS:");
+  const f=ITEMS.map((it,k)=>state.r[k]==="n"?`- #${k+1} ${it.q} (${it.a})`+(state.obs[k]?`: ${state.obs[k]}`:""):null).filter(Boolean);
+  L.push(...(f.length?f:["- Sin hallazgos"]));
+  const o=ITEMS.map((it,k)=>state.r[k]!=="n"&&state.obs[k]?`- #${k+1}: ${state.obs[k]}`:null).filter(Boolean);
+  if(o.length){ L.push(""); L.push("OTRAS OBSERVACIONES:"); L.push(...o); }
+  if(state.general){ L.push(""); L.push("COMENTARIO GENERAL: "+state.general); }
+  return L.join("\n");
+}
+function download(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000); }
+
+let logoData=null;
+function loadLogo(){ return logoData?Promise.resolve(logoData):new Promise(res=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement("canvas"); c.width=i.width; c.height=i.height; c.getContext("2d").drawImage(i,0,0); logoData=c.toDataURL("image/png"); res(logoData); }; i.onerror=()=>res(null); i.src="logo.png"; }); }
+
+async function buildPdf(){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4"});
+  const W=210, M=14, NAVY=[22,48,92], s=counts(); const cx=M+34+(W-2*M-82)/2;
+  const logo=await loadLogo();
+  doc.setDrawColor(...NAVY); doc.setLineWidth(.3); doc.rect(M,10,W-2*M,22);
+  if(logo){ try{ doc.addImage(logo,"PNG",M+3,13,26,16); }catch(e){} }
+  doc.line(M+34,10,M+34,32); doc.line(W-M-48,10,W-M-48,32);
+  doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(9); doc.text("Área: QHSE & CSR",cx,15,{align:"center"});
+  doc.setFontSize(13); doc.text("INFORME VISITA DS 44",cx,23,{align:"center"});
+  doc.setFontSize(8.5); doc.setFont("helvetica","normal"); doc.text("Verificación de gestión preventiva en planta",cx,28,{align:"center"});
+  doc.setTextColor(30); doc.setFontSize(8); const rx=W-M-46;
+  doc.text(doc.splitTextToSize("Planta: "+(plantaName()||"-"),45)[0],rx,15); doc.text("Fecha: "+fmtDate(state.fecha),rx,21); doc.text(doc.splitTextToSize("Evaluador: "+(state.evaluador||"-"),45)[0],rx,27);
+  let y=38;
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:8.5,cellPadding:1.8,halign:"center"},headStyles:{fillColor:NAVY},
+    head:[["Cumplimiento","Cumple","No cumple","No aplica","Pendientes"]],body:[[s.pct==null?"-":s.pct+"%",s.c,s.n,s.na,s.p]],columnStyles:{0:{fontStyle:"bold",fontSize:11}}});
+  y=doc.lastAutoTable.finalY+3;
+  doc.setFontSize(8.5); doc.text(`Contraparte: ${state.contraparte||"-"}    Dotación: ${state.dotacion||"-"}`,M,y+3); y+=8;
+  const hall=ITEMS.map((it,k)=>state.r[k]==="n"?[k+1,it.q+" ("+it.a+")",state.obs[k]||"",state.fotos[k].length||""]:null).filter(Boolean);
+  const head=(t)=>{ doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(10.5); doc.text(t,M,y); y+=2; };
+  head("Hallazgos");
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:8.5,cellPadding:1.8,valign:"top"},headStyles:{fillColor:[180,40,40]},
+    head:[["N°","Requisito","Observación / compromiso","Fotos"]],body:hall.length?hall:[["","Sin hallazgos","",""]],
+    columnStyles:{0:{cellWidth:9,halign:"center"},1:{cellWidth:78},3:{cellWidth:12,halign:"center"}}});
+  y=doc.lastAutoTable.finalY+7; head("Detalle de la verificación");
+  const col={c:[30,123,69],n:[180,40,40],na:[91,102,120]};
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:8,cellPadding:1.5,valign:"top"},headStyles:{fillColor:NAVY},
+    head:[["N°","Sección","Requisito","Resultado","Observación"]],
+    body:ITEMS.map((it,k)=>[k+1,it.s,it.q,state.r[k]?LABEL[state.r[k]]:"Pendiente",state.obs[k]||""]),
+    columnStyles:{0:{cellWidth:8,halign:"center"},1:{cellWidth:26},2:{cellWidth:72},3:{cellWidth:20,fontStyle:"bold"}},
+    didParseCell:d=>{ if(d.section==="body"&&d.column.index===3){ const r=state.r[d.row.index]; d.cell.styles.textColor=r?col[r]:[150,150,150]; } }});
+  y=doc.lastAutoTable.finalY+7;
+  if(state.general){ if(y>255){doc.addPage(); y=20;} head("Comentario general"); y+=3; doc.setFont("helvetica","normal"); doc.setTextColor(30); doc.setFontSize(9); const ls=doc.splitTextToSize(state.general,W-2*M); doc.text(ls,M,y); y+=ls.length*4.5+4; }
+  if(y>255){doc.addPage(); y=30;} else y+=14;
+  doc.setDrawColor(120); doc.setTextColor(60); doc.setFontSize(8.5); doc.setFont("helvetica","normal");
+  [["Realizado por",M+5],["Contraparte planta",W/2+10]].forEach(([l,x])=>{ doc.line(x,y,x+70,y); doc.text(l,x+35,y+4,{align:"center"}); });
+  // registro fotográfico
+  const fotos=[]; ITEMS.forEach((it,k)=>state.fotos[k].forEach(f=>fotos.push({k,f})));
+  if(fotos.length){
+    doc.addPage(); y=18; head("Registro fotográfico"); y+=4;
+    const cw=(W-2*M-6)/2, ch=62; let col2=0;
+    for(const {k,f} of fotos){
+      if(y+ch+8>285){ doc.addPage(); y=18; col2=0; }
+      const x=M+col2*(cw+6);
+      try{ const p=doc.getImageProperties(f.url); const r=Math.min(cw/p.width,ch/p.height); const w=p.width*r, h=p.height*r; doc.addImage(f.url,"JPEG",x+(cw-w)/2,y,w,h); }catch(e){}
+      doc.setFontSize(8); doc.setTextColor(60); doc.text(doc.splitTextToSize(`#${k+1} ${ITEMS[k].q}`,cw)[0]+(state.r[k]?` · ${LABEL[state.r[k]]}`:""),x,y+ch+4,{maxWidth:cw});
+      if(col2===1){ y+=ch+10; col2=0; } else col2=1;
+    }
+  }
+  const pages=doc.getNumberOfPages(); for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(120); doc.text(`Elis Chile · Checklist DS 44 · Página ${i} de ${pages}`,W/2,290,{align:"center"}); }
+  return doc.output("blob");
+}
+
+$("share").addEventListener("click",async()=>{
+  const b=$("share"); b.disabled=true;
+  try{
+    const blob=await buildPdf(); const file=new File([blob],`Informe_DS44_${fileBase()}.pdf`,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:"Informe DS 44 – "+(plantaName()||""),text:summaryText().split("\n").slice(0,3).join("\n")}); }
+    else { download(blob,file.name); toast("Tu teléfono no permite compartir directo: el PDF se descargó"); }
+  }catch(e){ if(!(e&&e.name==="AbortError")) toast("No se pudo generar el informe"); }
+  b.disabled=false;
+});
+$("pdf").addEventListener("click",async()=>{ const b=$("pdf"); b.disabled=true; try{ download(await buildPdf(),`Informe_DS44_${fileBase()}.pdf`); toast("Informe descargado"); }catch(e){ toast("No se pudo generar el informe"); } b.disabled=false; });
+$("copy").addEventListener("click",()=>{
+  const txt=summaryText(); const fb=()=>{ const b=$("copyBox"); b.value=txt; b.select(); try{ document.execCommand("copy"); toast("Resumen copiado"); }catch(e){ toast("No se pudo copiar"); } };
+  try{ navigator.clipboard.writeText(txt).then(()=>toast("Resumen copiado. Pégalo en un correo o WhatsApp."),fb); }catch(e){ fb(); }
+});
+$("csv").addEventListener("click",()=>{
+  const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const rows=[["Planta","Fecha","Evaluador","N°","Sección","Requisito","Referencia","Resultado","Observación","Fotos"]];
+  ITEMS.forEach((it,k)=>rows.push([plantaName(),fmtDate(state.fecha),state.evaluador,k+1,it.s,it.q,"DS 44 "+it.a,state.r[k]?LABEL[state.r[k]]:"Pendiente",state.obs[k],state.fotos[k].length]));
+  download(new Blob(["﻿"+rows.map(r=>r.map(esc).join(";")).join("\r\n")],{type:"text/csv"}),`DS44_${fileBase()}.csv`); toast("Archivo descargado");
+});
+
+/* ---------- historial ---------- */
+$("save").addEventListener("click",async()=>{
+  if(!plantaName()){ toast("Elige la planta antes de guardar"); $("planta").focus(); return; }
+  if(!state.id) state.id=String(Date.now());
+  const s=counts();
+  try{ await DB.put("evals",state.id,{state:JSON.parse(JSON.stringify(state)),planta:plantaName(),fecha:state.fecha,pct:s.pct,n:s.n,p:s.p,guardado:Date.now()}); saveDraft(); renderHist();
+    $("saveStatus").textContent="Guardada en el historial ("+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})+"). Si cambias algo, vuelve a guardar."; toast("Guardada en el historial"); }
+  catch(e){ toast("No se pudo guardar. Puede que el teléfono esté sin espacio."); }
+});
+async function renderHist(){
+  const h=$("hist"); let list=[]; try{ list=await DB.all("evals"); }catch(e){}
+  list.sort((a,b)=>b.guardado-a.guardado); h.textContent="";
+  if(!list.length){ const p=document.createElement("p"); p.className="empty"; p.textContent="Aún no hay visitas guardadas. Completa la lista y toca “Guardar en el historial”."; h.appendChild(p); return; }
+  list.forEach(v=>{
+    const row=document.createElement("div"); row.className="item2";
+    const b=document.createElement("button"); b.type="button";
+    const l=document.createElement("span"); l.innerHTML="<strong></strong><br><span class='status'></span>"; l.querySelector("strong").textContent=v.planta; l.querySelector(".status").textContent=fmtDate(v.fecha)+" · "+(v.n||0)+" hallazgos"+(v.p?` · ${v.p} pendientes`:"");
+    const p=document.createElement("span"); p.className="pct"; p.textContent=v.pct==null?"–":v.pct+"%"; b.append(l,p);
+    b.addEventListener("click",()=>{ state={...blank(),...v.state}; ITEMS.forEach((_,k)=>showObs(k,!!state.obs[k])); render(); saveDraft(); window.scrollTo({top:0}); toast("Abierta: "+v.planta+" "+fmtDate(v.fecha)); });
+    const d=document.createElement("button"); d.type="button"; d.className="del"; d.textContent="Eliminar";
+    d.addEventListener("click",async()=>{ if(d.dataset.sure){ await DB.del("evals",v.state.id); if(state.id===v.state.id) state.id=null; renderHist(); toast("Eliminada"); } else { d.dataset.sure="1"; d.textContent="¿Seguro?"; setTimeout(()=>{ d.dataset.sure=""; d.textContent="Eliminar"; },3000); } });
+    row.append(b,d); h.appendChild(row);
+  });
+}
+
+$("reset").addEventListener("click",()=>{ $("resetConfirm").hidden=false; });
+$("resetNo").addEventListener("click",()=>{ $("resetConfirm").hidden=true; });
+$("resetYes").addEventListener("click",()=>{ state=blank(); $("resetConfirm").hidden=true; ITEMS.forEach((_,k)=>showObs(k,false)); render(); saveDraft(); window.scrollTo({top:0}); $("saveStatus").textContent="Todo queda guardado en este teléfono mientras llenas, aunque no haya señal."; toast("Evaluación nueva"); });
+
+/* ---------- instalación y modo sin conexión ---------- */
+let deferred=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferred=e; $("install").hidden=false; });
+$("install").addEventListener("click",async()=>{ if(!deferred) return; deferred.prompt(); await deferred.userChoice; deferred=null; $("install").hidden=true; });
+window.addEventListener("appinstalled",()=>{ $("install").hidden=true; toast("App instalada"); });
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+
+/* ---------- inicio ---------- */
+build(); render(); renderHist();
+DB.get("kv","draft").then(d=>{ if(d&&Array.isArray(d.r)&&d.r.length===N){ state={...blank(),...d}; render(); if(state.id) $("saveStatus").textContent="Estás editando una visita del historial. Vuelve a guardar para actualizarla."; } }).catch(()=>{});
+</script>
+</body>
+</html>
