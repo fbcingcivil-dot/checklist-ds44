@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16305C">
+<title>Auditoría LOTO</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+/* Layout: una columna para el celular, barra superior fija con el resultado, tarjetas por energía como en el formulario */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --fg:#152238; --muted:#5B6678; --line:#D9DFE8;
+  --brand:#16305C; --brand-soft:#E3EAF5; --teal:#1F8A8A; --tag:#C8102E;
+  --ok:#1E7B45; --ok-soft:#E1F2E8; --bad:#B42828; --bad-soft:#F8E3E3; --na:#5B6678; --na-soft:#E8EBF0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --radius:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4; --tag:#F05A6E;
+  --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4; --tag:#F05A6E;
+  --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4}
+[hidden]{display:none!important}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;align-items:center;gap:12px}
+.logo{height:30px;width:auto;flex:none;background:#fff;border-radius:4px;padding:2px 4px}
+.ttl{flex:1;min-width:0}
+.ttl b{font-family:var(--display);font-size:20px;letter-spacing:.02em;color:var(--brand);display:block;line-height:1.05}
+.ttl span{font-size:13px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res{flex:none;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border-radius:6px;background:var(--na-soft);color:var(--na)}
+.res.ok{background:var(--ok-soft);color:var(--ok)} .res.bad{background:var(--bad-soft);color:var(--bad)}
+.tagline{height:4px;background:var(--tag)}
+h2{font-family:var(--display);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600;min-width:0}
+input,select,textarea{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:64px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.span2{grid-column:1/-1}
+.minfo{display:flex;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.chip{white-space:nowrap;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--na-soft);color:var(--na)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.ok{background:var(--ok-soft);color:var(--ok)}
+.en{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--radius);padding:12px;display:grid;gap:10px}
+.en[data-st="ok"]{border-left-color:var(--ok)} .en[data-st="bad"]{border-left-color:var(--bad)} .en[data-st="na"]{border-left-color:var(--na)}
+.en h3{margin:0;font-family:var(--display);font-size:19px;color:var(--brand);display:flex;align-items:center;gap:8px}
+.dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.25);flex:none}
+.q{display:grid;gap:6px}
+.q p{margin:0;font-weight:600;font-size:15px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{font:inherit;font-weight:600;font-size:15px;padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;min-height:46px}
+.seg button[aria-pressed="true"][data-v="Sí"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.seg button[aria-pressed="true"][data-v="No"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.seg.ap button[aria-pressed="true"][data-v="No"]{background:var(--na-soft);border-color:var(--na);color:var(--na)}
+.seg3{grid-template-columns:1fr 1fr 1fr}
+.seg3 button[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.photos{display:flex;gap:6px;flex-wrap:wrap}
+.photos figure{margin:0;position:relative}
+.photos img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.photos button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:none;background:var(--bad);color:#fff;font-weight:700;cursor:pointer;line-height:1}
+.lnk{font:inherit;font-size:14px;font-weight:600;color:var(--brand);background:none;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.status{font-size:13px;color:var(--muted);margin:0}
+.btns{display:grid;gap:8px}
+.btn{font:inherit;font-weight:700;font-size:16px;padding:13px;border-radius:9px;border:1px solid var(--brand);background:var(--brand);color:var(--surface);cursor:pointer}
+.btn.sec{background:transparent;color:var(--brand)}
+.btn:disabled{opacity:.5;cursor:default}
+.hist{display:grid;gap:8px}
+.item2{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:stretch}
+.hist .open{font:inherit;text-align:left;display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.hist .del{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--bad);border-radius:8px;padding:0 10px;cursor:pointer}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+.confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+.install{margin-top:14px}
+.mono{font-variant-numeric:tabular-nums;letter-spacing:.02em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="in">
+    <img class="logo" src="../logo.png" alt="Elis">
+    <div class="ttl"><b>AUDITORÍA LOTO</b><span id="hdr">Bloqueo y etiquetado por máquina</span></div>
+    <div class="res" id="res">Pendiente</div>
+  </div>
+  <div class="tagline"></div>
+</header>
+
+<main class="wrap">
+  <button class="btn sec install" id="install" type="button" hidden>Instalar como app en este teléfono</button>
+
+  <h2>Equipo intervenido</h2>
+  <div class="panel">
+    <div class="grid2">
+      <label class="f">Planta<select id="planta"></select></label>
+      <label class="f">Fecha<input id="fecha" type="date"></label>
+      <label class="f span2">Equipo (prioridad LOTO 1)<select id="equipo"></select></label>
+      <label class="f span2" id="otroWrap" hidden>Nombre del equipo<input id="otro" type="text" autocomplete="off" placeholder="Ej.: red de vapor, mesa de planchado"></label>
+    </div>
+    <div class="minfo" id="minfo"></div>
+    <div class="grid2">
+      <label class="f">Auditor<input id="auditor" type="text" autocomplete="name"></label>
+      <label class="f">Turno<select id="turno"><option>AM</option><option>PM</option><option>Noche</option></select></label>
+      <label class="f span2">Tarea / intervención<input id="tarea" type="text" placeholder="Ej.: cambio de burlete, reparación de cable"></label>
+      <label class="f">Origen<select id="origen"><option>Terreno</option><option>Revisión TOM</option></select></label>
+    </div>
+    <div class="q"><p>Tipo de LOTO realizado</p><div class="seg seg3" id="tipo">
+      <button type="button" data-v="Total" aria-pressed="false">Total</button>
+      <button type="button" data-v="Parcial" aria-pressed="false">Parcial</button>
+      <button type="button" data-v="No aplicado" aria-pressed="false">No aplicado</button></div></div>
+  </div>
+
+  <h2>Bloqueo por energía</h2>
+  <p class="status" style="margin-bottom:10px">Mismas preguntas del formulario AUDITORÍA LOTO. «¿Aplica?» viene marcado según las energías del equipo; corrígelo si en terreno es distinto.</p>
+  <div id="energies" style="display:grid;gap:10px"></div>
+
+  <h2>Certificado y evidencia</h2>
+  <div class="panel">
+    <div class="q"><p>¿Existe certificado LOTO asociado al trabajo?</p><div class="seg" data-k="certificado">
+      <button type="button" data-v="Sí" aria-pressed="false">Sí</button><button type="button" data-v="No" aria-pressed="false">No</button></div></div>
+    <div><button class="lnk" id="addFoto" type="button">Agregar foto (bloqueo o certificado)</button><input type="file" id="foto" accept="image/*" capture="environment" hidden></div>
+    <div class="photos" id="photos"></div>
+    <label class="f">Comentarios del auditor<textarea id="comentarios"></textarea></label>
+  </div>
+
+  <div id="ncWrap" hidden>
+    <h2>Hallazgo y acción</h2>
+    <div class="panel">
+      <ul class="status" id="fallas" style="padding-left:18px;margin:0"></ul>
+      <label class="f">Hallazgo<textarea id="hallazgo" placeholder="Qué faltó o se hizo mal"></textarea></label>
+      <label class="f">Acción<textarea id="accion" placeholder="Qué se va a hacer para corregirlo"></textarea></label>
+      <div class="grid2">
+        <label class="f">Responsable<input id="responsable" type="text" placeholder="Cargo o nombre"></label>
+        <label class="f">Fecha compromiso<input id="compromiso" type="date"></label>
+      </div>
+    </div>
+  </div>
+
+  <h2>Enviar y guardar</h2>
+  <div class="panel">
+    <div class="btns">
+      <button class="btn" id="share" type="button">Compartir informe PDF</button>
+      <button class="btn sec" id="save" type="button">Guardar en el historial</button>
+      <button class="btn sec" id="pdf" type="button">Descargar informe PDF</button>
+      <button class="btn sec" id="reset" type="button">Nueva auditoría</button>
+      <div class="confirm" id="resetConfirm" hidden>¿Empezar una nueva? Lo no guardado en el historial se pierde.
+        <button class="lnk" id="resetYes" type="button">Sí, empezar de nuevo</button>
+        <button class="lnk" id="resetNo" type="button">Cancelar</button>
+      </div>
+    </div>
+    <p class="status" id="saveStatus">Todo queda guardado en este teléfono mientras llenas, aunque no haya señal.</p>
+  </div>
+
+  <h2>Historial en este teléfono</h2>
+  <div class="hist" id="hist"></div>
+  <div class="btns" style="margin-top:10px">
+    <button class="btn sec" id="csv" type="button">Exportar historial para el Excel (CSV)</button>
+  </div>
+  <p class="status" style="margin-top:6px">El CSV tiene las mismas columnas de la hoja «Auditorías» del programa de auditoría LOTO: envíalo a QHSE para consolidar.</p>
+</main>
+
+<script src="../jspdf.umd.min.js"></script>
+<script src="../jspdf.plugin.autotable.min.js"></script>
+<script>
+const MACH = [["Calama","TAGCL00095","Apilador Calandra 2",1,0,"EA"],["Calama","TAGCL00049","Calandra 1",1,1,"EAV"],["Calama","TAGCL00050","Calandra 2",1,1,"EAV"],["Calama","TAGCL00052","Cargadora 2",1,0,"EA"],["Calama","TAGCL00051","Dobladora 2",1,0,"EA"],["Calama","TAGCL00044","Dobladora Maximat",1,0,"EA"],["Calama","TAGCL00061","Prensa Senking",1,1,"EW"],["Calama","TAGCL00017","Secador Túnel Gris N°1",1,0,"EAV"],["Calama","TAGCL00018","Secador Túnel Gris N°2",1,0,"EAV"],["Calama","TAGCL00007","Sistema Dosificación Lavadoras",1,0,"E"],["Calama","TAGCL00006","Sistema Dosificación Túneles N°1",1,0,"E"],["Calama","TAGCL00005","Sistema Dosificación Túneles N°2",1,0,"E"],["Calama","TAGCL00008","Sistema de Trasvasije Químicos",1,0,"E"],["Calama","TAGCL00003","Túnel Senking",1,1,"EAVWQ"],["Calama","TAGCL00094","Vaporizador",1,0,"EAV"],["Calama","TAGCL00096","Cargadora Calandra 1",2,0,"EA"],["Calama","TAGCL00009","Centrifuga Lavatec",2,0,"EA"],["Calama","TAGCL00054","Dobladora 1",2,0,"EA"],["Calama","TAGCL00048","Dobladora Maximat Manual",2,0,"EA"],["Calama","TAGCL00088","Lavadora 1 Se90",2,1,"EAVWQ"],["Calama","TAGCL00112","Lavadora 2 Se42",2,1,"EAVWQ"],["Calama","TAGCL00111","Lavadora 3 Se42",2,1,"EAVWQ"],["Calama","TAGCL00110","Lavadora 4 Se42",2,1,"EAVWQ"],["Calama","TAGCL00109","Lavadora 5 Se42",2,1,"EAVWQ"],["Calama","TAGCL00108","Lavadora 6 Se90",2,1,"EAVWQ"],["Calama","TAGCL00100","Lavadora 8 Domus",2,1,"EAVWQ"],["Calama","TAGCL00058","Lavadora 9 Domus",2,1,"EAVWQ"],["Calama","TAGCL00021","Secador Azules N°1",2,0,"EAV"],["Calama","TAGCL00022","Secador Azules N°2",2,0,"EAV"],["Calama","TAGCL00023","Secador Aéreo N°3",2,0,"EAV"],["Calama","TAGCL00024","Secador Con Succión N°1",2,0,"EAV"],["Calama","TAGCL00025","Secador Con Succión N°2",2,0,"EAV"],["Calama","TAGCL00026","Secador Fibir Sala Seco",2,0,"EAV"],["Calama","TAGCL00019","Secador Túnel Gris N°3",2,0,"EAV"],["Calama","TAGCL00020","Secador Túnel Gris N°4",2,0,"EAV"],["Calama","TAGCL00004","Túnel Lavatec",2,1,"EAVWQ"],["Cerrillos","EQP382164","Calandra 1",1,0,"EAV"],["Cerrillos","EQP382165","Calandra 2",1,0,"EAV"],["Cerrillos","EQP382089","Calandra 3",1,1,"EAV"],["Cerrillos","EQP382171","Cargadora 2",1,0,"EA"],["Cerrillos","EQP382016","Cargadora 3",1,1,"EA"],["Cerrillos","EQP382188","Cargadora de Frazada Nueva",1,0,"EA"],["Cerrillos","EQP382187","Dobladora De Frazada Nueva",1,0,"EA"],["Cerrillos","EQP382204","Dosificador Automático T-MAX Girbau",1,1,"E"],["Cerrillos","EQP382021","Dosificador Automático T-MAX Lavatec",1,1,"E"],["Cerrillos","EQP382114","Lavadora Centrifuga 3",1,1,"EAVWQ"],["Cerrillos","EQP382115","Lavadora Centrifuga 4",1,1,"EAVWQ"],["Cerrillos","EQP382118","Lavadora Centrifuga 9",1,1,"EAVWQ"],["Cerrillos","EQP382110","Prensa Girbau",1,1,"EW"],["Cerrillos","EQP382111","Prensa Lavatec",1,1,"EW"],["Cerrillos","EQP382146","Secadores Hoteles Minera N°2",1,0,"EAV"],["Cerrillos","EQP382147","Secadores Hoteles Minera N°3",1,0,"EAV"],["Cerrillos","EQP382104","Túnel Girbau",1,1,"EAVWQ"],["Cerrillos","EQP382105","Túnel Lavatec",1,0,"EAVWQ"],["Cerrillos","EQP382222","WashMulti Air Solenoid",1,1,"E"],["Cerrillos","EQP382221","WashMulti Air lavanderia",1,1,"E"],["Cerrillos","EQP382167","Calandra 4",2,0,"EAV"],["Cerrillos","EQP382172","Cargadora 5",2,0,"EA"],["Cerrillos","TAG100001","Dobladora 1",2,0,"EA"],["Cerrillos","EQP382176","Dobladora 2",2,0,"EA"],["Cerrillos","EQP382048","Dobladora 3",2,1,"EA"],["Cerrillos","EQP382179","Dobladora 5",2,0,"EA"],["Cerrillos","EQP382184","Dobladora Frazadas Latam N°1",2,1,""],["Cerrillos","EQP382185","Dobladora Frazadas Latam N°2",2,1,""],["Cerrillos","EQP382186","Dobladora Frazadas Latam N°3",2,1,""],["Cerrillos","EQP382192","Dobladora Laura",2,1,"EA"],["Cerrillos","EQP382201","Esterilzador N°1",2,1,"EAVW"],["Cerrillos","EQP382119","Lavadora Centrifuga 10",2,1,"EAVWQ"],["Cerrillos","EQP382117","Lavadora Centrifuga 7",2,1,"EAVWQ"],["Cerrillos","EQP382112","Lavadora Centrifuga Hoteles N°1",2,1,"EAVWQ"],["Cerrillos","EQP382113","Lavadora Centrifuga Hoteles N°2",2,1,"EAVWQ"],["Cerrillos","EQP382109","Lavadora Seco",2,1,"EAVW"],["Cerrillos","EQP382151","Secador Piso Lan",2,0,"EAV"],["Cerrillos","EQP382138","Secadores 1 Lavatec",2,1,"EAV"],["Cerrillos","EQP382131","Secadores 1 Passat",2,0,"EAV"],["Cerrillos","EQP382139","Secadores 2  Lavatec",2,1,"EAV"],["Cerrillos","EQP382132","Secadores 2 Passat",2,0,"EAV"],["Cerrillos","EQP382140","Secadores 3  Lavatec",2,1,"EAV"],["Cerrillos","EQP382133","Secadores 3 Passat",2,0,"EAV"],["Cerrillos","EQP382141","Secadores 4 Lavatec",2,1,"EAV"],["Cerrillos","EQP382142","Secadores 5 Lavatec",2,0,"EAV"],["Cerrillos","EQP382134","Secadores 5 Milnor",2,1,"EA"],["Cerrillos","EQP382145","Secadores Hoteles Minera N°1",2,0,"EAV"],["Cerrillos","EQP382148","Secadores Hoteles Minera N°4",2,0,"EAV"],["Cerrillos","EQP382001","Vaporizador P3",2,0,"EAV"],["Cerrillos","EQP382202","Esterilzador N°2",2,1,"EAVW"],["Cerrillos","EQP382160","Prensa Seco N°1",2,0,"EAV"],["Cerrillos","EQP382161","Prensa Seco N°2",2,0,"EAV"],["Cerrillos","EQP382152","Secadora Sensor Dry 9 Kgs N°1",2,0,"EAV"],["Cerrillos","EQP382144","Secadores 7  Passat",2,1,"EAV"],["Concepción","TAGCL00153","Calandra 1",1,1,"EAV"],["Concepción","TAGCL00154","Calandra 2",1,0,"EAV"],["Concepción","TAGCL00530","Calandra 2",1,0,"EAV"],["Concepción","TAGCL00157","Cargadora 2",1,1,"EA"],["Concepción","TAGCL00158","Dobladora 1",1,0,"EA"],["Concepción","TAGCL00156","Dobladora 2",1,0,"EA"],["Concepción","TAGCL00191","Dosificación Lavadoras",1,0,"E"],["Concepción","TAGCL00192","Dosificación Túnel - Burnus Hychem",1,0,"E"],["Concepción","TAGCL00164","Lavadora N°9 - Schulthess - Se 90",1,1,"EAVWQ"],["Concepción","TAGCL00201","Secador N°8 - Gematex - Dst100",1,0,"EAV"],["Concepción","TAGCL00198","Lavadora N°1 - Schulthess - Se 90",2,0,"EAVWQ"],["Concepción","TAGCL00143","Lavadora N°5 - Schulthess - Se 42",2,1,"EAVWQ"],["Concepción","TAGCL00140","Lavadora N°6 - Schulthess - Se 42",2,1,"EAVWQ"],["Concepción","TAGCL00150","Lavadora N°8 - Schulthess - Se 42",2,0,"EAVWQ"],["Concepción","TAGCL00162","Prensa Planchado N°1",2,0,"EAV"],["Concepción","TAGCL00172","Secador N°3 - Primus - Pu120Srmm2S2W02",2,1,"EAV"],["Concepción","TAGCL00193","Secador N°4 - Passat - 246D",2,1,"EAV"],["Concepción","TAGCL00173","Secador N°5 - Passat - 144",2,0,"EAV"],["Concepción","TAGCL00174","Secador N°6 - Passat - 246D",2,0,"EAV"],["Concepción","TAGCL00134","Secador N°7 - Electrolux - T3530",2,0,"EAV"],["Concepción","TAGCL00151","Dobladora Laura",2,1,"EA"],["Concepción","TAGCL00163","Prensa Planchado N°2",2,0,"EAV"],["Concepción","TAGCL00199","Secador N°1 - Passat - 153.10 D",2,0,"EAV"],["Hospital Militar","TAGCL00315","Calandra",1,1,"EAV"],["Hospital Militar","TAGCL00314","Dobladora",1,1,"EA"],["Hospital Militar","TAGCL30313","Dosificador Químicos",1,1,"E"],["Hospital Militar","TAGCL00310","Lavadora N° 1 180 Kg",1,1,"EAVWQ"],["Hospital Militar","TAGCL00309","Lavadora N° 2 180 Kg",1,1,"EAVWQ"],["Hospital Militar","TAGCL00308","Lavadora N° 3 25 Kg",2,1,"EAVWQ"],["Hospital Militar","TAGCL00307","Secador N° 1 Girbau",2,1,"EAV"],["Hospital Militar","TAGCL00317","Secador N° 2 Girbau",2,1,"EAV"],["Juan Elías","TAGCL00419","Calandra 1 P2",1,0,"EAV"],["Juan Elías","TAGCL00418","Calandra 2 P2",1,0,"EAV"],["Juan Elías","TAGCL00415","Cargadora 1 P2",1,0,"EA"],["Juan Elías","TAGCL00412","Dobladora 1 P2",1,0,"EA"],["Juan Elías","TAGCL00416","Dobladora 2 P2",1,0,"EA"],["Juan Elías","TAGCL00488","Prensa Túnel Gris P1",1,0,"EW"],["Juan Elías","TAGCL00531","Prensa Túnel Gris P2",1,0,"EW"],["Juan Elías","TAGCL00434","Secador Aéreo N°2 P2",1,0,"EAV"],["Juan Elías","TAGCL00492","Túnel Gris P1",1,0,"EAVWQ"],["Juan Elías","TAGCL00450","Túnel Gris P2",1,0,"EAVWQ"],["Juan Elías","TAGCL00425","Abridor Aéreo N°11 P2",2,0,"EAV"],["Juan Elías","TAGCL00424","Abridor Aéreo N°12 P2",2,0,"EAV"],["Juan Elías","TAGCL00465","Calandra Sabanas P1",2,0,"EAV"],["Juan Elías","TAGCL00413","Cargadora 3 P2",2,0,"EA"],["Juan Elías","TAGCL00462","Cargadora Sabanas P1",2,0,"EA"],["Juan Elías","TAGCL00411","Dobladora 3 P2",2,0,"EA"],["Juan Elías","TAGCL00463","Dobladora Sabanas P1",2,0,"EA"],["Juan Elías","TAGCL00481","Lavadora N°10 P1 Desmanche",2,0,"EAVWQ"],["Juan Elías","TAGCL00482","Lavadora N°6 P1 Desmanche",2,0,"EAVWQ"],["Juan Elías","TAGCL00444","Lavadora N°7 P2",2,1,"EAVWQ"],["Juan Elías","TAGCL00443","Lavadora N°8 P2",2,1,"EAVWQ"],["Juan Elías","TAGCL00442","Lavadora N°9 P2",2,1,"EAVWQ"],["Juan Elías","TAGCL00426","Secador Aéreo (Succión) N°10 P2",2,0,"EAV"],["Juan Elías","TAGCL00477","Secador Aéreo N°1 P1",2,0,"EAV"],["Juan Elías","TAGCL00435","Secador Aéreo N°1 P2",2,0,"EAV"],["Juan Elías","TAGCL00476","Secador Aéreo N°2 P1",2,0,"EAV"],["Juan Elías","TAGCL00475","Secador Aéreo N°3 P1",2,0,"EAV"],["Juan Elías","TAGCL00433","Secador Aéreo N°3 P2",2,0,"EAV"],["Juan Elías","TAGCL00474","Secador Aéreo N°4 P1",2,0,"EAV"],["Juan Elías","TAGCL00432","Secador Aéreo N°4 P2",2,0,"EAV"],["Juan Elías","TAGCL00473","Secador Aéreo N°5 P1",2,0,"EAV"],["Juan Elías","TAGCL00431","Secador Aéreo N°5 P2",2,0,"EAV"],["Juan Elías","TAGCL00430","Secador Aéreo N°6 P2",2,0,"EAV"],["Juan Elías","TAGCL00429","Secador Aéreo N°7 P2",2,0,"EAV"],["Juan Elías","TAGCL00428","Secador Aéreo N°8 P2",2,0,"EAV"],["Juan Elías","TAGCL00423","Secador Piso N°1 P2",2,0,"EAV"],["Juan Elías","TAGCL00422","Secador Piso N°2 P2",2,0,"EAV"],["Juan Elías","TAGCL00470","Secador Piso N°3 P1",2,0,"EAV"],["Juan Elías","TAGCL00469","Secador Piso N°4 P1",2,0,"EAV"],["Juan Elías","TAGCL00520","Sistema de Trasvasije Químicos",2,0,"E"],["Juan Elías","TAGCL00427","Secador Aéreo (Succión) N°9 P2",2,0,"EAV"],["Juan Elías","TAGCL00472","Secador Piso N°1 P1 Desmanche",2,0,"EAV"],["Juan Elías","TAGCL00471","Secador Piso N°2 P1 Desmanche",2,0,"EAV"],["Puerto Montt","TAGCL00609","Calandra",1,1,"EAV"],["Puerto Montt","TAGCL00612","Cargadora - Elis",1,1,"EA"],["Puerto Montt","TAGCL00611","Dobladora",1,1,"EA"],["Puerto Montt","TAGCL00639","Lavadora 90 Kgs - Milnor N°1",1,1,"EAVW"],["Puerto Montt","TAGCL00640","Lavadora 90 Kgs - Schulthess N°2",1,1,"EAVW"],["Puerto Montt","TAGCL00590","Secador 1 35 Kgs - Schulthess",1,1,"EAV"],["Puerto Montt","TAGCL00589","Secador Aéreo 1",1,0,"EAV"],["Puerto Montt","TAGCL00586","Secador Aéreo 2",1,0,"EAV"],["Puerto Montt","TAGCL00645","Lavadora 18 Kgs - Schulthess N°6",2,0,"EAWQ"],["Puerto Montt","TAGCL00643","Lavadora 42 Kgs - Schulthess N°3",2,1,"EAVW"],["Puerto Montt","TAGCL00642","Lavadora 42 Kgs - Schulthess N°4",2,1,"EAVW"],["Puerto Montt","TAGCL00644","Lavadora 42 Kgs - Schulthess N°5",2,1,"EAVW"],["Puerto Montt","TAGCL00591","Secador 2 20 Kgs - Lavatec",2,1,"EAV"],["Puerto Montt","TAGCL00595","Secador 3 20 Kgs - Cissell",2,0,"EAV"],["Puerto Montt","TAGCL00594","Secador 4 25 Kgs - Cissell",2,0,"EAV"],["Puerto Montt","TAGCL00592","Secador 5 35 Kgs - Cissell",2,1,"EAV"],["Puerto Montt","TAGCL00596","Secador 6 40 Kgs - Stahl",2,1,"EAV"],["Puerto Montt","TAGCL00614","Prensa De Planchado",2,0,"EAV"],["San Francisco","TAG100158","Calandra 1",1,0,"EAV"],["San Francisco","TAG100163","Cargadora 1",1,1,"EA"],["San Francisco","TAG100198","Dobladora 1",1,1,"EA"],["San Francisco","TAG100166","Dobladora 3",1,1,"EA"],["San Francisco","TAG100172","Dobladora De Frazadas N°2",1,0,"EA"],["San Francisco","TAG100068","Panel De Dosificación Túneles Ac Cítrico",1,0,"E"],["San Francisco","TAG100066","Panel De Dosificación Túneles Liquisan y H2O2",1,0,"E"],["San Francisco","TAG100069","Panel De Dosificación Túneles Soda y Desengrasante",1,0,"E"],["San Francisco","TAG100067","Panel De Dosificación Túneles Trisanox",1,0,"E"],["San Francisco","TAG100070","Panel de Dosificación Túneles Soft y Soda",1,0,"E"],["San Francisco","TAG100073","Sistema de Trasvasije Químicos",1,0,"E"],["San Francisco","TAG100100","Túnel 1",1,0,"EAVWQ"],["San Francisco","TAG100150","Abridor 1",2,0,"EAV"],["San Francisco","TAG100151","Abridor 2",2,0,"EAV"],["San Francisco","TAG100159","Calandra 2",2,0,"EAV"],["San Francisco","TAG100160","Calandra 3",2,1,"EAV"],["San Francisco","TAG100164","Cargadora 3",2,1,"EA"],["San Francisco","TAG100167","Cargadora Calandra N°2",2,0,"EA"],["San Francisco","TAG100165","Cargadora De Frazadas N°2",2,0,"EA"],["San Francisco","TAG100162","Dobladora 2",2,0,"EA"],["San Francisco","TAG100174","Dobladora De Toallas N°1",2,0,"EA"],["San Francisco","TAG100173","Dobladora Maximat",2,0,"EA"],["San Francisco","TAG100114","Lavadora N°1 - 120 Kg",2,1,"EAVWQ"],["San Francisco","TAG100115","Lavadora N°2 - 80 Kg",2,1,"EAVWQ"],["San Francisco","TAG100181","Lavadora N°6 25 Kg",2,1,""],["San Francisco","TAG100072","Panel De Dosificación Lavadoras",2,0,"E"],["San Francisco","TAG100113","Prensa N°3",2,0,"EW"],["San Francisco","TAG100140","Secador Aéreo 1",2,0,"EAV"],["San Francisco","TAG100141","Secador Aéreo 2",2,0,"EAV"],["San Francisco","TAG100142","Secador Aéreo N°3",2,0,"EAV"],["San Francisco","TAG100143","Secador Aéreo N°4",2,0,"EAV"],["San Francisco","TAG100144","Secador Aéreo N°5",2,0,"EAV"],["San Francisco","TAG100145","Secador Aéreo N°6",2,0,"EAV"],["San Francisco","TAG100146","Secador Aéreo N°7",2,0,"EAV"],["San Francisco","TAG100147","Secador Aéreo N°8",2,0,"EAV"],["San Francisco","TAG100148","Secador Aéreo N°9",2,0,"EAV"],["San Francisco","TAG100149","Secador Con Succión N°10",2,0,"EAV"],["San Francisco","TAG100168","Staker Calandra N°1",2,0,"EA"],["San Francisco","TAG100170","Staker Calandra N°2",2,0,"EA"],["San Francisco","TAG100169","Staker Calandra N°3",2,1,"EA"],["San Francisco","TAG100102","Túnel 3",2,0,"EAVWQ"],["San Francisco","TAG100171","Vaporizador",2,0,"EAV"],["San Francisco","TAG100116","Lavadora N°3 - 42 Kg",2,1,"EAVWQ"],["San Francisco","TAG100180","Lavadora N°5 - 30Kg",2,1,"EAVWQ"],["San Francisco","TAG100182","Lavadora en Seco",2,0,"EAVW"],["San Francisco","TAG100071","Panel De Dosificación Riles",2,0,"E"],["San Francisco","TAG100190","Prensa De Planchado N°2",2,1,"EAV"],["San Francisco","TAG100184","Secador Piso N°1",2,1,"EAV"],["San Francisco","TAG100185","Secador Piso N°2",2,1,"EAV"],["Santa Margarita","TAG055518","Cargadora 2",1,0,"EA"],["Santa Margarita","TAGCL00693","Dobladora 2",1,0,"EA"],["Santa Margarita","TAG055536","Prensa Túnel Gris (Rosita)",1,0,"EW"],["Santa Margarita","TAG055533","Prensa Túnel Nuevo",1,0,"EW"],["Santa Margarita","TAG055584","Sistema Dosificador Túnel SLY 7",1,1,"E"],["Santa Margarita","TAG055580","Sistema Dosificador Túnel Tbler 1",1,1,"E"],["Santa Margarita","TAG055581","Sistema Dosificador Túnel Tbler 2",1,1,"E"],["Santa Margarita","TAG055582","Sistema Dosificador Túnel Tbler 4",1,1,"E"],["Santa Margarita","TAG055583","Sistema Dosificador Túnel Tbler 5",1,1,"E"],["Santa Margarita","TAG055586","Sistema de Trasvasije Químicos",1,1,"E"],["Santa Margarita","TAG055535","Túnel Lavado Gris (Rosita)",1,1,"EAVWQ"],["Santa Margarita","TAG055532","Túnel Lavado Nuevo",1,1,"EAVWQ"],["Santa Margarita","TAG055547","Abridor Celeste 1",2,0,"EAV"],["Santa Margarita","TAG055548","Abridor Celeste 2",2,0,"EAV"],["Santa Margarita","TAG055552","Abridor Gris 3",2,0,"EAV"],["Santa Margarita","TAG055516","Calandra 1",2,0,"EAV"],["Santa Margarita","TAG055529","Calandra 11",2,0,"EAV"],["Santa Margarita","TAG055519","Calandra 2",2,0,"EAV"],["Santa Margarita","TAG055522","Calandra 7",2,0,"EAV"],["Santa Margarita","TAG055515","Cargadora 1",2,0,"EA"],["Santa Margarita","TAG055528","Cargadora 11",2,0,"EA"],["Santa Margarita","TAG055521","Cargadora 7",2,0,"EA"],["Santa Margarita","TAG055517","Dobladora 1",2,0,"EA"],["Santa Margarita","TAG055530","Dobladora 11",2,0,"EA"],["Santa Margarita","TAG055523","Dobladora 7",2,0,"EA"],["Santa Margarita","TAG055555","Lavadora 1 90K",2,0,"EAVWQ"],["Santa Margarita","TAG055565","Lavadora 11 20K Girbau",2,0,"EAVWQ"],["Santa Margarita","TAG055558","Lavadora 14 90K",2,0,"EAVWQ"],["Santa Margarita","TAG055559","Lavadora 15 42K",2,0,"EAVWQ"],["Santa Margarita","TAG055560","Lavadora 16 42K",2,0,"EAVWQ"],["Santa Margarita","TAG055562","Lavadora 19 42K",2,0,"EAVWQ"],["Santa Margarita","TAG055556","Lavadora 2 90K",2,0,"EAVWQ"],["Santa Margarita","TAG055543","Secador Aéreo Celeste 1",2,0,"EAV"],["Santa Margarita","TAG055544","Secador Aéreo Celeste 2",2,0,"EAV"],["Santa Margarita","TAG055545","Secador Aéreo Celeste 3",2,0,"EAV"],["Santa Margarita","TAG055546","Secador Aéreo Celeste 4",2,0,"EAV"],["Santa Margarita","TAG055550","Secador Gris 1",2,0,"EAV"],["Santa Margarita","TAG055574","Secador Piso 9 Nuevo",2,0,"EAV"],["Santa Margarita","TAG055585","Sistema Dosificador Detergentes Lavadora",2,0,"E"],["Santa Margarita","TAG055553","Abridor Gris 4",2,0,"EAV"],["Santa Margarita","TAG055538","Dobladora Frazadas",2,0,"EA"],["Santa Margarita","TAG055564","Lavadora 10 20K Jensen",2,0,"EAVWQ"],["Santa Margarita","TAG055705","Lavadora 12 Kilos LG (Casa) N°2",2,0,"EAVWQ"],["Santa Margarita","TAG055561","Lavadora 17 42K",2,0,"EAVWQ"],["Santa Margarita","TAG055557","Lavadora 4 42K",2,0,"EAVWQ"],["Santa Margarita","TAG055563","Maquina En Seco 1",2,0,"EAVW"],["Santa Margarita","TAG055697","Prensa Vapor 1",2,0,"EAV"],["Santa Margarita","TAG055700","Prensa Vapor 2",2,0,"EAV"],["Santa Margarita","TAG055699","Prensa Vapor 3",2,0,"EAV"],["Santa Margarita","TAG055568","Secador Azul Piso 3 P1",2,0,"EAV"],["Santa Margarita","TAG055549","Secador Aéreo Celeste7",2,0,"EAV"],["Santa Margarita","TAG055569","Secador Golder Girbau Piso 4 P1",2,0,"EAV"],["Santa Margarita","TAG055570","Secador Golder Girbau Piso 5 P1",2,0,"EAV"],["Santa Margarita","TAG055551","Secador Gris 2",2,0,"EAV"],["Santa Margarita","TAG055554","Secador Piso",2,0,"EAV"],["Santa Margarita","TAG055571","Secador Piso 6 Color Blanco P1",2,0,"EAV"],["Santa Margarita","TAG055573","Secador Piso 8 Kannegiesser P1",2,0,"EAV"],["Santa Margarita","TAG055567","Secador Primus Piso 1 P1",2,0,"EAV"],["Santa Margarita","TAG055566","Secador Primus Piso 2 P1",2,0,"EAV"],["Santa Margarita","TAG055572","Secadores N°7",2,0,"EAV"],["Temuco","TAGCL00328","Calandra",1,1,"EAV"],["Temuco","TAGCL00326","Cargadora",1,1,"EA"],["Temuco","TAGCL00327","Dobladora",1,1,"EA"],["Temuco","TAGCL00347","Lavadora 1-90 Kgs",1,1,"EAVWQ"],["Temuco","TAGCL00346","Lavadora 2-90 Kgs",1,1,"EAVWQ"],["Temuco","TAGCL00343","Lavadora 5-42 Kgs",1,1,"EAVWQ"],["Temuco","TAGCL00336","Secador Aéreo 1",1,1,"EAV"],["Temuco","TAGCL00335","Secador Aéreo 2",1,1,"EAV"],["Temuco","TAGCL00345","Lavadora 3-42 Kgs",2,1,"EAVWQ"],["Temuco","TAGCL00340","Lavadora 8-10 Kgs",2,1,"EW"],["Temuco","TAGCL00334","Secador Passat 14 Kgs",2,1,""],["Temuco","TAGCL00333","Secador Passat 28 Kgs",2,1,"EAV"],["Temuco","TAGCL00332","Secador Passat 32 Kgs",2,1,"EAV"],["Temuco","TAGCL00331","Secador Sea Lion Dzz 25 N°1",2,1,"EAV"],["Temuco","TAGCL00330","Secador Sea Lion Dzz-25 N°2",2,1,"EAV"],["Temuco","TAGCL00329","Secador Sea Lion Dzz-25 N°3",2,1,"EAV"],["Valparaíso","TAGCL00235","Calandra 1",1,0,"EAV"],["Valparaíso","TAGCL00234","Calandra 2",1,0,"EAV"],["Valparaíso","TAG100199","Calandra 3",1,0,"EAV"],["Valparaíso","TAGCL00229","Cargadora 2",1,1,"EA"],["Valparaíso","TAGCL00231","Dobladora 2",1,1,"EA"],["Valparaíso","TAG100153","Dobladora 3",1,0,"EA"],["Valparaíso","TAGCL00226","Dobladora Maria",1,0,"EA"],["Valparaíso","TAGCL00299","Dosificador De Producto Túnel N°1",1,0,"E"],["Valparaíso","TAGCL00302","Dosificador De Producto Túnel N°2",1,0,"E"],["Valparaíso","TAGCL00223","Prensa Túnel Rojo",1,1,"EW"],["Valparaíso","TAGCL00227","Sistema de Trasvasije Químicos",1,0,"E"],["Valparaíso","TAGCL00296","Túnel Rojo",1,1,"EAVWQ"],["Valparaíso","TAGCL00230","Cargadora 1",2,1,"EA"],["Valparaíso","TAGCL00232","Dobladora 1",2,1,"EA"],["Valparaíso","TAGCL00298","Dosificación Lavadoras",2,0,"E"],["Valparaíso","TAGCL00247","Lavadora 12 Kilos N°7",2,1,"EAVWQ"],["Valparaíso","TAGCL00220","Lavadora 20 Kilos N°10",2,1,"EAWQ"],["Valparaíso","TAGCL00250","Lavadora 42 Kilos N°2",2,1,"EAVWQ"],["Valparaíso","TAGCL00249","Lavadora 42 Kilos N°3",2,1,"EAVWQ"],["Valparaíso","TAGCL00248","Lavadora 42 Kilos N°4",2,1,"EAVWQ"],["Valparaíso","TAGCL00251","Lavadora 75 Kilos N°1",2,1,"EAVWQ"],["Valparaíso","TAGCL00209","Prensa Temperatura",2,0,"EW"],["Valparaíso","TAGCL00206","Secador 1",2,0,"EAV"],["Valparaíso","TAGCL00244","Secador 10",2,0,"EAV"],["Valparaíso","TAGCL00243","Secador 12",2,0,"EAV"],["Valparaíso","TAGCL00242","Secador 13",2,0,"EAV"],["Valparaíso","TAGCL00241","Secador 14",2,0,"EAV"],["Valparaíso","TAGCL00240","Secador 15",2,0,"EAV"],["Valparaíso","TAGCL00207","Secador 2",2,0,"EAV"],["Valparaíso","TAGCL00245","Secador 4",2,0,"EAV"],["Valparaíso","TAGCL00217","Secador 8",2,0,"EAV"]];  // [planta, código, equipo, ola (1 = crítico alto), modo operación documentado, energías del consolidado]
+const PLANTAS = ["Calama","Cerrillos","Concepción","Hospital Militar","Juan Elías","Puerto Montt","San Francisco","Santa Margarita","Temuco","Valparaíso"];
+const EN = [
+  {k:"E", n:"Eléctrica", c:"#D7262E", q:[["candado","¿Se encuentra bloqueado con candado ROJO?"],["tarjeta","¿Se encuentra la tarjeta de identificación?"]]},
+  {k:"V", n:"Vapor",     c:"#9AA0A6", q:[["candado","¿Se encuentra bloqueado con candado GRIS?"],["tarjeta","¿Se encuentra la tarjeta de identificación?"],["manometro","¿Se cuenta con manómetro para verificar ausencia de energía?"]]},
+  {k:"A", n:"Aire",      c:"#1F5FBF", q:[["candado","¿Se encuentra bloqueado con candado AZUL?"],["tarjeta","¿Se encuentra la tarjeta de identificación?"],["manometro","¿Se cuenta con manómetro para verificar ausencia de energía?"]]},
+  {k:"W", n:"Agua",      c:"#1E8A4C", q:[["candado","¿Se encuentran bloqueadas todas las válvulas con candado VERDE?"],["tarjeta","¿Se encuentra la tarjeta de identificación?"],["manometro","¿Se cuenta con todos los manómetros para verificar ausencia de energía?"]]},
+  {k:"G", n:"Gas",       c:"#F2B705", q:[["candado","¿Se encuentra bloqueado con candado AMARILLO?"],["tarjeta","¿Se encuentra la tarjeta de identificación?"],["manometro","¿Se cuenta con manómetro para verificar ausencia de energía?"]]},
+  {k:"Q", n:"Químico",   c:"#7A4FB5", q:[["dosificacion","¿Se bloqueó la dosificación?"]]}
+];
+const byTag = Object.fromEntries(MACH.map(m=>[m[1],m]));
+const $ = id => document.getElementById(id);
+
+/* ---------- almacenamiento local (IndexedDB) ---------- */
+const DB = (()=>{ let p; const open=()=>p||(p=new Promise((res,rej)=>{ const r=indexedDB.open("loto",1); r.onupgradeneeded=()=>{ r.result.createObjectStore("kv"); r.result.createObjectStore("audits"); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }));
+  const tx=(store,mode,fn)=>open().then(db=>new Promise((res,rej)=>{ const t=db.transaction(store,mode); const s=t.objectStore(store); const out=fn(s); t.oncomplete=()=>res(out&&out.result); t.onerror=()=>rej(t.error); }));
+  return { get:(st,k)=>tx(st,"readonly",s=>s.get(k)), put:(st,k,v)=>tx(st,"readwrite",s=>s.put(v,k)), del:(st,k)=>tx(st,"readwrite",s=>s.delete(k)), all:st=>tx(st,"readonly",s=>s.getAll()) }; })();
+
+function today(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function fmtDate(s){ if(!s) return ""; const [y,m,d]=s.split("-"); return `${d}-${m}-${y}`; }
+function lastAuditor(){ try{ return localStorage.getItem("loto-auditor")||""; }catch(e){ return ""; } }
+function blank(){ return {id:null, planta:"", fecha:today(), tag:"", otro:"", auditor:lastAuditor(), turno:"AM", tarea:"", origen:"Terreno", tipo:"", a:{}, certificado:"", comentarios:"", hallazgo:"", accion:"", responsable:"", compromiso:"", fotos:[]}; }
+let state = blank();
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
+let draftT; function saveDraft(){ clearTimeout(draftT); draftT=setTimeout(()=>{ DB.put("kv","draft",state).catch(()=>{}); try{ localStorage.setItem("loto-auditor",state.auditor||""); }catch(e){} },300); }
+function machine(){ return byTag[state.tag] || null; }
+function equipoName(){ const m=machine(); return m ? m[2] : (state.tag==="__otro" ? (state.otro||"Otro equipo") : ""); }
+function equipoCode(){ const m=machine(); return m ? m[1] : ""; }
+
+/* ---------- formulario ---------- */
+$("planta").innerHTML = `<option value="">Elegir…</option>` + PLANTAS.map(p=>`<option>${p}</option>`).join("");
+function fillEquipos(){
+  const list = MACH.filter(m=>m[0]===state.planta).sort((a,b)=>a[3]-b[3]||a[2].localeCompare(b[2],"es",{numeric:true}));
+  const sel=$("equipo"); sel.textContent="";
+  const add=(v,t)=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o); };
+  add("", state.planta ? "Elegir equipo…" : "Primero elige la planta");
+  list.forEach(m=>add(m[1], `${m[2]} · ${m[1]}${m[3]===1?" · crítico alto":""}`));
+  if(state.planta) add("__otro","Otro equipo (no está en la lista)");
+  sel.value = state.tag || "";
+}
+function presetAplica(){
+  const m=machine(); state.a={};
+  if(m && m[5]) EN.forEach(e=>{ state.a[e.k+".aplica"] = m[5].includes(e.k) ? "Sí" : "No"; });
+}
+function segHtml(key,cls){ const v=state.a[key]; return `<div class="seg ${cls||""}" data-k="${key}">${["Sí","No"].map(x=>`<button type="button" data-v="${x}" aria-pressed="${v===x}">${x}</button>`).join("")}</div>`; }
+function enStatus(e){
+  const ap=state.a[e.k+".aplica"]; if(ap==="No") return "na"; if(ap!=="Sí") return "";
+  const vals=e.q.map(([q])=>state.a[e.k+"."+q]); if(vals.includes("No")) return "bad"; return vals.every(v=>v==="Sí")?"ok":"";
+}
+function renderEnergies(){
+  $("energies").innerHTML = EN.map(e=>`<div class="en" data-st="${enStatus(e)}"><h3><span class="dot" style="background:${e.c}"></span>Bloqueo ${e.n}</h3>
+    <div class="q"><p>¿Aplica bloquear energía?</p>${segHtml(e.k+".aplica","ap")}</div>
+    ${state.a[e.k+".aplica"]==="Sí" ? e.q.map(([q,t])=>`<div class="q"><p>${t}</p>${segHtml(e.k+"."+q)}</div>`).join("") : ""}</div>`).join("");
+}
+function compute(){
+  const need=[], fails=[];
+  EN.forEach(e=>{ need.push(e.k+".aplica"); if(state.a[e.k+".aplica"]==="Sí") e.q.forEach(([q,t])=>{ need.push(e.k+"."+q); if(state.a[e.k+"."+q]==="No") fails.push(`${e.n}: ${t.replace(/^¿|\?$/g,"")} – No`); }); });
+  if(state.certificado==="No") fails.push("Sin certificado LOTO asociado al trabajo");
+  if(state.tipo==="No aplicado") fails.unshift("LOTO no aplicado en la intervención");
+  const missing = need.filter(k=>!state.a[k]).length + (state.certificado?0:1) + (state.tipo?0:1);
+  const none = EN.every(e=>state.a[e.k+".aplica"]==="No");
+  if(none && missing===0) fails.push("No se bloqueó ninguna energía");
+  const res = fails.length ? "No conforme" : (missing ? null : "Conforme");
+  return {res, fails, missing};
+}
+function render(){
+  $("planta").value=state.planta; fillEquipos(); $("otroWrap").hidden = state.tag!=="__otro"; $("otro").value=state.otro;
+  ["fecha","auditor","turno","tarea","origen","comentarios","hallazgo","accion","responsable","compromiso"].forEach(id=>$(id).value=state[id]||"");
+  document.querySelectorAll("#tipo button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===state.tipo));
+  document.querySelectorAll('[data-k="certificado"] button').forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===state.certificado));
+  const m=machine();
+  $("minfo").innerHTML = m ? `<span class="chip mono">${m[1]}</span>${m[3]===1?'<span class="chip bad">Crítico alto</span>':'<span class="chip">Crítico medio/bajo</span>'}<span class="chip ${m[4]?"ok":"bad"}">Modo de operación ${m[4]?"documentado":"sin documentar"}</span>` : "";
+  renderEnergies(); renderPhotos(); renderResult();
+}
+function renderResult(){
+  const r=compute(), el=$("res");
+  el.className="res"+(r.res==="Conforme"?" ok":r.res==="No conforme"?" bad":""); el.textContent = r.res || (r.missing?`Faltan ${r.missing}`:"Pendiente");
+  $("hdr").textContent = [state.planta, equipoName()].filter(Boolean).join(" · ") || "Bloqueo y etiquetado por máquina";
+  $("ncWrap").hidden = r.res!=="No conforme";
+  $("fallas").innerHTML = r.fails.map(f=>`<li>${f.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}</li>`).join("");
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest(".seg button"); if(!b) return;
+  const seg=b.parentElement;
+  if(seg.id==="tipo"){ state.tipo=b.dataset.v; }
+  else if(seg.dataset.k==="certificado"){ state.certificado=b.dataset.v; }
+  else { state.a[seg.dataset.k]=b.dataset.v; }
+  seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
+  if(seg.dataset.k && seg.dataset.k.startsWith("") && seg.closest("#energies")) renderEnergies();
+  renderResult(); saveDraft();
+});
+$("planta").addEventListener("change",()=>{ state.planta=$("planta").value; state.tag=""; state.a={}; render(); saveDraft(); });
+$("equipo").addEventListener("change",()=>{ state.tag=$("equipo").value; presetAplica(); render(); saveDraft(); });
+["fecha","auditor","turno","tarea","origen","comentarios","hallazgo","accion","responsable","compromiso","otro"].forEach(id=>$(id).addEventListener("input",()=>{ state[id]=$(id).value; if(id==="otro") renderResult(); saveDraft(); }));
+
+/* ---------- fotos ---------- */
+function shrink(file){ return new Promise((res,rej)=>{ const img=new Image(); const u=URL.createObjectURL(file); img.onload=()=>{ const m=1280, sc=Math.min(1,m/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); res(c.toDataURL("image/jpeg",.78)); }; img.onerror=()=>rej(); img.src=u; }); }
+$("addFoto").addEventListener("click",()=>$("foto").click());
+$("foto").addEventListener("change",async()=>{ const f=$("foto").files[0]; $("foto").value=""; if(!f) return; try{ state.fotos.push(await shrink(f)); renderPhotos(); saveDraft(); }catch(e){ toast("No se pudo leer la foto"); } });
+function renderPhotos(){
+  const p=$("photos"); p.textContent="";
+  state.fotos.forEach((u,i)=>{ const fig=document.createElement("figure"); const img=document.createElement("img"); img.src=u; img.alt="Foto "+(i+1); const x=document.createElement("button"); x.type="button"; x.textContent="×"; x.setAttribute("aria-label","Quitar foto "+(i+1)); x.addEventListener("click",()=>{ state.fotos.splice(i,1); renderPhotos(); saveDraft(); }); fig.append(img,x); p.appendChild(fig); });
+}
+
+/* ---------- validación ---------- */
+function check(){
+  const r=compute();
+  if(!state.planta){ toast("Elige la planta"); $("planta").focus(); return null; }
+  if(!state.tag || (state.tag==="__otro" && !state.otro.trim())){ toast("Elige el equipo"); $("equipo").focus(); return null; }
+  if(!r.res){ toast(`Faltan ${r.missing} respuestas`); return null; }
+  if(r.res==="No conforme" && (!state.hallazgo.trim()||!state.accion.trim()||!state.responsable.trim())){ toast("Un No conforme necesita hallazgo, acción y responsable"); $("hallazgo").focus(); return null; }
+  return r;
+}
+function fileBase(){ return [state.planta, equipoName(), state.fecha].join("_").replace(/[^\wÁÉÍÓÚáéíóúÑñ-]+/g,"_"); }
+function energiasTxt(){ return EN.filter(e=>state.a[e.k+".aplica"]==="Sí").map(e=>e.n).join(", ") || "Ninguna"; }
+
+/* ---------- PDF ---------- */
+function download(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000); }
+let logoData=null;
+function loadLogo(){ return logoData?Promise.resolve(logoData):new Promise(res=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement("canvas"); c.width=i.width; c.height=i.height; c.getContext("2d").drawImage(i,0,0); logoData=c.toDataURL("image/png"); res(logoData); }; i.onerror=()=>res(null); i.src="../logo.png"; }); }
+async function buildPdf(r){
+  const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4"});
+  const W=210, M=14, NAVY=[22,48,92], RED=[180,40,40], GREEN=[30,123,69]; const cx=M+34+(W-2*M-82)/2;
+  const logo=await loadLogo();
+  doc.setDrawColor(...NAVY); doc.setLineWidth(.3); doc.rect(M,10,W-2*M,22);
+  if(logo){ try{ doc.addImage(logo,"PNG",M+3,13,26,16); }catch(e){} }
+  doc.line(M+34,10,M+34,32); doc.line(W-M-48,10,W-M-48,32);
+  doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(9); doc.text("Área: QHSE & CSR",cx,15,{align:"center"});
+  doc.setFontSize(13); doc.text("INFORME AUDITORÍA LOTO",cx,23,{align:"center"});
+  doc.setFontSize(8.5); doc.setFont("helvetica","normal"); doc.text("Bloqueo y etiquetado de energías peligrosas",cx,28,{align:"center"});
+  doc.setTextColor(30); doc.setFontSize(8); const rx=W-M-46;
+  doc.text(doc.splitTextToSize("Planta: "+state.planta,45)[0],rx,15); doc.text("Fecha: "+fmtDate(state.fecha)+" · "+state.turno,rx,21); doc.text(doc.splitTextToSize("Auditor: "+(state.auditor||"-"),45)[0],rx,27);
+  let y=38;
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8},headStyles:{fillColor:NAVY},
+    body:[["Equipo",equipoName()+(equipoCode()?" ("+equipoCode()+")":"")],["Tarea / intervención",state.tarea||"-"],["Origen",state.origen],["Tipo de LOTO",state.tipo],["Energías bloqueadas",energiasTxt()],["Certificado LOTO",state.certificado],["Resultado",r.res]],
+    columnStyles:{0:{cellWidth:45,fontStyle:"bold"}},
+    didParseCell:d=>{ if(d.row.index===6&&d.column.index===1){ d.cell.styles.fontStyle="bold"; d.cell.styles.textColor=r.res==="Conforme"?GREEN:RED; } }});
+  y=doc.lastAutoTable.finalY+7;
+  const head=(t)=>{ doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(10.5); doc.text(t,M,y); y+=2; };
+  head("Verificación por energía");
+  const body=[]; EN.forEach(e=>{ const ap=state.a[e.k+".aplica"]; body.push([e.n,"¿Aplica bloquear energía?",ap]); if(ap==="Sí") e.q.forEach(([q,t])=>body.push(["",t,state.a[e.k+"."+q]||"-"])); });
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:8.5,cellPadding:1.6},headStyles:{fillColor:NAVY},head:[["Energía","Pregunta","Respuesta"]],body,
+    columnStyles:{0:{cellWidth:24,fontStyle:"bold"},2:{cellWidth:22,halign:"center",fontStyle:"bold"}},
+    didParseCell:d=>{ if(d.section==="body"&&d.column.index===2&&d.row.raw[1]!=="¿Aplica bloquear energía?"){ d.cell.styles.textColor=d.cell.raw==="No"?RED:GREEN; } }});
+  y=doc.lastAutoTable.finalY+7;
+  if(r.res==="No conforme"){
+    if(y>240){doc.addPage(); y=20;} head("Hallazgo y acción");
+    doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8,valign:"top"},headStyles:{fillColor:RED},
+      body:[["Fallas detectadas",r.fails.join("\n")],["Hallazgo",state.hallazgo],["Acción",state.accion],["Responsable",state.responsable],["Fecha compromiso",fmtDate(state.compromiso)||"-"]],columnStyles:{0:{cellWidth:45,fontStyle:"bold"}}});
+    y=doc.lastAutoTable.finalY+7;
+  }
+  if(state.comentarios){ if(y>255){doc.addPage(); y=20;} head("Comentarios del auditor"); y+=3; doc.setFont("helvetica","normal"); doc.setTextColor(30); doc.setFontSize(9); const ls=doc.splitTextToSize(state.comentarios,W-2*M); doc.text(ls,M,y); y+=ls.length*4.5+4; }
+  if(y>255){doc.addPage(); y=30;} else y+=14;
+  doc.setDrawColor(120); doc.setTextColor(60); doc.setFontSize(8.5); doc.setFont("helvetica","normal");
+  [["Auditor",M+5],["Responsable del trabajo",W/2+10]].forEach(([l,x])=>{ doc.line(x,y,x+70,y); doc.text(l,x+35,y+4,{align:"center"}); });
+  if(state.fotos.length){
+    doc.addPage(); y=18; head("Registro fotográfico"); y+=4;
+    const cw=(W-2*M-6)/2, ch=62; let c2=0;
+    state.fotos.forEach((u,i)=>{ if(y+ch+8>285){ doc.addPage(); y=18; c2=0; } const x=M+c2*(cw+6);
+      try{ const p=doc.getImageProperties(u); const s=Math.min(cw/p.width,ch/p.height); doc.addImage(u,"JPEG",x+(cw-p.width*s)/2,y,p.width*s,p.height*s); }catch(e){}
+      doc.setFontSize(8); doc.setTextColor(60); doc.text("Foto "+(i+1),x,y+ch+4); if(c2===1){ y+=ch+10; c2=0; } else c2=1; });
+  }
+  const pages=doc.getNumberOfPages(); for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(120); doc.text(`Elis Chile · Auditoría LOTO · Página ${i} de ${pages}`,W/2,290,{align:"center"}); }
+  return doc.output("blob");
+}
+$("share").addEventListener("click",async()=>{
+  const r=check(); if(!r) return; const b=$("share"); b.disabled=true;
+  try{ await saveToHist(r,true);
+    const blob=await buildPdf(r); const file=new File([blob],`Auditoria_LOTO_${fileBase()}.pdf`,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:"Auditoría LOTO – "+state.planta,text:`Auditoría LOTO ${state.planta} · ${equipoName()} · ${fmtDate(state.fecha)} · ${r.res}`}); }
+    else { download(blob,file.name); toast("Tu teléfono no permite compartir directo: el PDF se descargó"); }
+  }catch(e){ if(!(e&&e.name==="AbortError")) toast("No se pudo generar el informe"); }
+  b.disabled=false;
+});
+$("pdf").addEventListener("click",async()=>{ const r=check(); if(!r) return; const b=$("pdf"); b.disabled=true; try{ download(await buildPdf(r),`Auditoria_LOTO_${fileBase()}.pdf`); toast("Informe descargado"); }catch(e){ toast("No se pudo generar el informe"); } b.disabled=false; });
+
+/* ---------- historial ---------- */
+async function saveToHist(r,quiet){
+  if(!state.id) state.id=String(Date.now());
+  await DB.put("audits",state.id,{state:JSON.parse(JSON.stringify(state)),res:r.res,fails:r.fails,guardado:Date.now()});
+  saveDraft(); renderHist();
+  $("saveStatus").textContent="Guardada en el historial ("+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})+"). Si cambias algo, vuelve a guardar.";
+  if(!quiet) toast("Guardada en el historial");
+}
+$("save").addEventListener("click",async()=>{ const r=check(); if(!r) return; try{ await saveToHist(r); }catch(e){ toast("No se pudo guardar. Puede que el teléfono esté sin espacio."); } });
+async function renderHist(){
+  const h=$("hist"); let list=[]; try{ list=await DB.all("audits"); }catch(e){}
+  list.sort((a,b)=>(b.state.fecha||"").localeCompare(a.state.fecha||"")||b.guardado-a.guardado); h.textContent="";
+  if(!list.length){ const p=document.createElement("p"); p.className="empty"; p.textContent="Aún no hay auditorías guardadas en este teléfono."; h.appendChild(p); return; }
+  list.forEach(v=>{
+    const s=v.state, m=byTag[s.tag];
+    const row=document.createElement("div"); row.className="item2";
+    const b=document.createElement("button"); b.type="button"; b.className="open";
+    const l=document.createElement("span"); const st=document.createElement("strong"); st.textContent=m?m[2]:(s.otro||"Otro equipo"); const sm=document.createElement("span"); sm.className="status"; sm.style.display="block"; sm.textContent=`${s.planta} · ${fmtDate(s.fecha)}${s.auditor?" · "+s.auditor:""}`; l.append(st,sm);
+    const c=document.createElement("span"); c.className="chip "+(v.res==="Conforme"?"ok":"bad"); c.textContent=v.res; b.append(l,c);
+    b.addEventListener("click",()=>{ state={...blank(),...JSON.parse(JSON.stringify(s))}; render(); saveDraft(); window.scrollTo({top:0}); toast("Abierta: "+st.textContent); });
+    const d=document.createElement("button"); d.type="button"; d.className="del"; d.textContent="Eliminar";
+    d.addEventListener("click",async()=>{ if(d.dataset.sure){ await DB.del("audits",s.id); if(state.id===s.id) state.id=null; renderHist(); toast("Eliminada"); } else { d.dataset.sure="1"; d.textContent="¿Seguro?"; setTimeout(()=>{ d.dataset.sure=""; d.textContent="Eliminar"; },3000); } });
+    row.append(b,d); h.appendChild(row);
+  });
+}
+$("csv").addEventListener("click",async()=>{
+  let list=[]; try{ list=await DB.all("audits"); }catch(e){}
+  if(!list.length){ toast("No hay auditorías en el historial"); return; }
+  const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const rows=[["Fecha","Planta","Origen","Equipo (TAG)","Descripción equipo","Auditor","Tarea / intervención","Energías que requería bloquear","Tipo LOTO aplicado","Certificado LOTO","Resultado","Hallazgo","Acción","Responsable","Fecha compromiso","Estado acción"]];
+  list.sort((a,b)=>(a.state.fecha||"").localeCompare(b.state.fecha||"")).forEach(v=>{ const s=v.state, m=byTag[s.tag];
+    const en=EN.filter(e=>s.a[e.k+".aplica"]==="Sí").map(e=>e.n).join(", ");
+    rows.push([fmtDate(s.fecha).replace(/-/g,"/"),s.planta,s.origen,m?m[1]:"",m?m[2]:(s.otro||""),s.auditor,s.tarea,en,s.tipo,s.certificado,v.res,s.hallazgo,s.accion,s.responsable,fmtDate(s.compromiso).replace(/-/g,"/"),v.res==="No conforme"?"Abierta":""]); });
+  download(new Blob(["﻿"+rows.map(r=>r.map(esc).join(";")).join("\r\n")],{type:"text/csv"}),`Auditorias_LOTO_${today()}.csv`); toast("Archivo descargado");
+});
+$("reset").addEventListener("click",()=>{ $("resetConfirm").hidden=false; });
+$("resetNo").addEventListener("click",()=>{ $("resetConfirm").hidden=true; });
+$("resetYes").addEventListener("click",()=>{ state=blank(); $("resetConfirm").hidden=true; render(); saveDraft(); window.scrollTo({top:0}); $("saveStatus").textContent="Todo queda guardado en este teléfono mientras llenas, aunque no haya señal."; toast("Auditoría nueva"); });
+
+/* ---------- instalación y modo sin conexión ---------- */
+let deferred=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferred=e; $("install").hidden=false; });
+$("install").addEventListener("click",async()=>{ if(!deferred) return; deferred.prompt(); await deferred.userChoice; deferred=null; $("install").hidden=true; });
+window.addEventListener("appinstalled",()=>{ $("install").hidden=true; toast("App instalada"); });
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+
+/* ---------- inicio ---------- */
+render(); renderHist();
+DB.get("kv","draft").then(d=>{ if(d&&d.a){ state={...blank(),...d}; render(); if(state.id) $("saveStatus").textContent="Estás editando una auditoría del historial. Vuelve a guardar para actualizarla."; } }).catch(()=>{});
+</script>
+</body>
+</html>
