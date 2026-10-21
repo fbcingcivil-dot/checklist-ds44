@@ -13,7 +13,7 @@
 :root{
   --bg:#F3F5F8; --surface:#FFFFFF; --fg:#152238; --muted:#5B6678; --line:#D9DFE8;
   --brand:#16305C; --brand-soft:#E3EAF5; --teal:#1F8A8A; --tag:#C8102E;
-  --ok:#1E7B45; --ok-soft:#E1F2E8; --bad:#B42828; --bad-soft:#F8E3E3; --na:#5B6678; --na-soft:#E8EBF0;
+  --warn:#B26A00; --ok:#1E7B45; --ok-soft:#E1F2E8; --bad:#B42828; --bad-soft:#F8E3E3; --na:#5B6678; --na-soft:#E8EBF0;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
   --radius:10px;
@@ -21,9 +21,9 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
   --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4; --tag:#F05A6E;
-  --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}}
+  --warn:#F0B35A; --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --warn:#F0B35A; --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
   --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4; --tag:#F05A6E;
   --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}
 *{box-sizing:border-box}
@@ -65,6 +65,11 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .seg button[aria-pressed="true"][data-v="No"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 .seg.ap button[aria-pressed="true"][data-v="No"]{background:var(--na-soft);border-color:var(--na);color:var(--na)}
 .seg3{grid-template-columns:1fr 1fr 1fr}
+.seg.c3{grid-template-columns:1fr 1fr 1fr}
+.seg button[aria-pressed="true"][data-v="N/A"],.seg button[aria-pressed="true"][data-v="No observado"]{background:var(--na-soft);border-color:var(--na);color:var(--na)}
+.en[data-st="warn"]{border-left-color:var(--warn)}
+.num{width:24px;height:24px;border-radius:50%;background:var(--brand);color:var(--surface);font-family:var(--body);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.en .note{margin:0;font-size:13px;color:var(--muted)}
 .seg3 button[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
 .photos{display:flex;gap:6px;flex-wrap:wrap}
 .photos figure{margin:0;position:relative}
@@ -107,14 +112,14 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
       <label class="f">Planta<select id="planta"></select></label>
       <label class="f">Fecha<input id="fecha" type="date"></label>
       <label class="f span2">Equipo (prioridad LOTO 1)<select id="equipo"></select></label>
-      <label class="f span2" id="otroWrap" hidden>Nombre del equipo<input id="otro" type="text" autocomplete="off" placeholder="Ej.: red de vapor, mesa de planchado"></label>
+      <div class="grid2 span2" id="otroWrap" hidden><label class="f">Nombre del equipo<input id="otro" type="text" autocomplete="off" placeholder="Ej.: red de vapor"></label><label class="f">TAG del equipo<input id="otroTag" type="text" autocomplete="off" autocapitalize="characters" placeholder="Ej.: TAG055599"></label></div>
     </div>
     <div class="minfo" id="minfo"></div>
     <div class="grid2">
       <label class="f">Auditor<input id="auditor" type="text" autocomplete="name"></label>
       <label class="f">Turno<select id="turno"><option>AM</option><option>PM</option><option>Noche</option></select></label>
       <label class="f span2">Tarea / intervención<input id="tarea" type="text" placeholder="Ej.: cambio de burlete, reparación de cable"></label>
-      <label class="f">Origen<select id="origen"><option>Terreno</option><option>Revisión TOM</option></select></label>
+      <label class="f">Origen<select id="origen"><option>Visita en terreno</option><option>Revisión TOM</option></select></label>
     </div>
     <div class="q"><p>Tipo de LOTO realizado</p><div class="seg seg3" id="tipo">
       <button type="button" data-v="Total" aria-pressed="false">Total</button>
@@ -122,7 +127,11 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
       <button type="button" data-v="No aplicado" aria-pressed="false">No aplicado</button></div></div>
   </div>
 
-  <h2>Bloqueo por energía</h2>
+  <h2>5 pasos LOTO</h2>
+  <p class="status" id="pasosNote" style="margin-bottom:10px">Pasos 2, 3, 5 y retiro son críticos: un «No» deja la auditoría No conforme. Un «No» en los pasos 1 o 4 queda como observación con acción.</p>
+  <div id="pasos" style="display:grid;gap:10px"></div>
+
+  <h2>Bloqueo por energía (paso 3)</h2>
   <p class="status" style="margin-bottom:10px">Mismas preguntas del formulario AUDITORÍA LOTO. «¿Aplica?» viene marcado según las energías del equipo; corrígelo si en terreno es distinto.</p>
   <div id="energies" style="display:grid;gap:10px"></div>
 
@@ -143,7 +152,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
       <label class="f">Acción<textarea id="accion" placeholder="Qué se va a hacer para corregirlo"></textarea></label>
       <div class="grid2">
         <label class="f">Responsable<input id="responsable" type="text" placeholder="Cargo o nombre"></label>
-        <label class="f">Fecha compromiso<input id="compromiso" type="date"></label>
+        <label class="f">Fecha compromiso (cierre)<input id="compromiso" type="date"></label>
       </div>
     </div>
   </div>
@@ -168,7 +177,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
   <div class="btns" style="margin-top:10px">
     <button class="btn sec" id="csv" type="button">Exportar historial para el Excel (CSV)</button>
   </div>
-  <p class="status" style="margin-top:6px">El CSV tiene las mismas columnas de la hoja «Auditorías» del programa de auditoría LOTO: envíalo a QHSE para consolidar.</p>
+  <p class="status" style="margin-top:6px">Las primeras 16 columnas del CSV (A a P) son las de la hoja «Auditorías» del programa de auditoría LOTO; desde la Q vienen turno, los 5 pasos y observaciones. Envíalo a QHSE para consolidar.</p>
 </main>
 
 <script src="../jspdf.umd.min.js"></script>
@@ -184,6 +193,15 @@ const EN = [
   {k:"G", n:"Gas",       c:"#F2B705", q:[["candado","¿Se encuentra bloqueado con candado AMARILLO?"],["tarjeta","¿Se encuentra la tarjeta de identificación?"],["manometro","¿Se cuenta con manómetro para verificar ausencia de energía?"]]},
   {k:"Q", n:"Químico",   c:"#7A4FB5", q:[["dosificacion","¿Se bloqueó la dosificación?"]]}
 ];
+const STEPS = [
+  {n:1, t:"Preparar y avisar", crit:false, q:[["p1a","¿El ejecutor identificó todas las energías del equipo (según su modo de operación)?",0],["p1b","¿Se avisó a operadores y personas afectadas antes de detener el equipo?",0]]},
+  {n:2, t:"Detener y aislar", crit:true, q:[["p2a","¿El equipo se detuvo con su control normal de parada?",0],["p2b","¿Se cortaron todas las energías en sus puntos de aislamiento (seccionador, válvulas, dosificación)?",0]]},
+  {n:3, t:"Bloquear y etiquetar", crit:true, q:[["p3a","¿Cada persona que interviene tiene su propio candado (o usa pinza o caja de bloqueo grupal)?",0]], note:"Candado de color y tarjeta por energía se revisan más abajo, en «Bloqueo por energía»."},
+  {n:4, t:"Liberar energía residual", crit:false, q:[["p4a","¿Se liberó la energía residual (purga de aire y vapor, partes detenidas, superficies frías)?",0],["p4b","¿Las partes que pueden caer o girar están aseguradas mecánicamente?",1]]},
+  {n:5, t:"Verificar ausencia de energía", crit:true, q:[["p5a","¿Se hizo la prueba de partida (intento de encendido) antes de intervenir?",0],["p5b","¿Se midió ausencia de tensión con instrumento?",1]], note:"Los manómetros por energía se revisan en «Bloqueo por energía»."},
+  {n:"R", t:"Retiro del bloqueo (si lo alcanzas a ver)", crit:true, q:[["r1","¿Zona despejada (sin herramientas ni personas) y protecciones repuestas antes de energizar?",2],["r2","¿Cada persona retiró solo su propio candado?",2]]}
+];
+const OPTS = [["Sí","No"],["Sí","No","N/A"],["Sí","No","No observado"]];
 const byTag = Object.fromEntries(MACH.map(m=>[m[1],m]));
 const $ = id => document.getElementById(id);
 
@@ -195,13 +213,16 @@ const DB = (()=>{ let p; const open=()=>p||(p=new Promise((res,rej)=>{ const r=i
 function today(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
 function fmtDate(s){ if(!s) return ""; const [y,m,d]=s.split("-"); return `${d}-${m}-${y}`; }
 function lastAuditor(){ try{ return localStorage.getItem("loto-auditor")||""; }catch(e){ return ""; } }
-function blank(){ return {id:null, planta:"", fecha:today(), tag:"", otro:"", auditor:lastAuditor(), turno:"AM", tarea:"", origen:"Terreno", tipo:"", a:{}, certificado:"", comentarios:"", hallazgo:"", accion:"", responsable:"", compromiso:"", fotos:[]}; }
+function blank(){ return {id:null, planta:"", fecha:today(), tag:"", otro:"", otroTag:"", p:{}, auditor:lastAuditor(), turno:"AM", tarea:"", origen:"Visita en terreno", tipo:"", a:{}, certificado:"", comentarios:"", hallazgo:"", accion:"", responsable:"", compromiso:"", fotos:[]}; }
 let state = blank();
 function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
 let draftT; function saveDraft(){ clearTimeout(draftT); draftT=setTimeout(()=>{ DB.put("kv","draft",state).catch(()=>{}); try{ localStorage.setItem("loto-auditor",state.auditor||""); }catch(e){} },300); }
+function isTom(){ return state.origen==="Revisión TOM"; }
+function normalize(){ if(state.origen==="Terreno"||!state.origen) state.origen="Visita en terreno"; if(!state.p) state.p={}; if(state.otroTag==null) state.otroTag=""; }
+function stepVal(st,p){ const v=st.q.map(([k])=>p[k]); if(v.includes("No")) return "No"; return v.every(Boolean)?"Sí":""; }
 function machine(){ return byTag[state.tag] || null; }
 function equipoName(){ const m=machine(); return m ? m[2] : (state.tag==="__otro" ? (state.otro||"Otro equipo") : ""); }
-function equipoCode(){ const m=machine(); return m ? m[1] : ""; }
+function equipoCode(){ const m=machine(); return m ? m[1] : (state.tag==="__otro" ? (state.otroTag||"").trim().toUpperCase() : ""); }
 
 /* ---------- formulario ---------- */
 $("planta").innerHTML = `<option value="">Elegir…</option>` + PLANTAS.map(p=>`<option>${p}</option>`).join("");
@@ -226,40 +247,54 @@ function enStatus(e){
 function renderEnergies(){
   $("energies").innerHTML = EN.map(e=>`<div class="en" data-st="${enStatus(e)}"><h3><span class="dot" style="background:${e.c}"></span>Bloqueo ${e.n}</h3>
     <div class="q"><p>¿Aplica bloquear energía?</p>${segHtml(e.k+".aplica","ap")}</div>
-    ${state.a[e.k+".aplica"]==="Sí" ? e.q.map(([q,t])=>`<div class="q"><p>${t}</p>${segHtml(e.k+"."+q)}</div>`).join("") : ""}</div>`).join("");
+    ${state.a[e.k+".aplica"]==="Sí" && !isTom() ? e.q.map(([q,t])=>`<div class="q"><p>${t}</p>${segHtml(e.k+"."+q)}</div>`).join("") : ""}</div>`).join("");
+}
+function stepStatus(st){ const v=stepVal(st,state.p); return v==="No" ? (st.crit?"bad":"warn") : v==="Sí" ? "ok" : ""; }
+function renderSteps(){
+  const tom=isTom();
+  $("pasos").hidden=tom;
+  $("pasosNote").textContent = tom ? "En una revisión TOM no se observa el trabajo: los 5 pasos quedan como «No observado» y se evalúan tipo de LOTO y certificado." : "Pasos 2, 3, 5 y retiro son críticos: un «No» deja la auditoría No conforme. Un «No» en los pasos 1 o 4 queda como observación con acción.";
+  if(tom){ $("pasos").innerHTML=""; return; }
+  $("pasos").innerHTML = STEPS.map(st=>`<div class="en" data-st="${stepStatus(st)}"><h3><span class="num">${st.n==="R"?"R":st.n}</span>${st.n==="R"?"":"Paso "+st.n+" · "}${st.t}</h3>
+    ${st.note?`<p class="note">${st.note}</p>`:""}
+    ${st.q.map(([k,t,o])=>{ const v=state.p[k]; return `<div class="q"><p>${t}</p><div class="seg${OPTS[o].length===3?" c3":""}" data-p="${k}">${OPTS[o].map(x=>`<button type="button" data-v="${x}" aria-pressed="${v===x}">${x}</button>`).join("")}</div></div>`; }).join("")}</div>`).join("");
 }
 function compute(){
   const need=[], fails=[];
-  EN.forEach(e=>{ need.push(e.k+".aplica"); if(state.a[e.k+".aplica"]==="Sí") e.q.forEach(([q,t])=>{ need.push(e.k+"."+q); if(state.a[e.k+"."+q]==="No") fails.push(`${e.n}: ${t.replace(/^¿|\?$/g,"")} – No`); }); });
+  const obs=[], tom=isTom();
+  if(!tom) STEPS.forEach(st=>st.q.forEach(([k,t])=>{ need.push("p:"+k); if(state.p[k]==="No"){ const lbl=`${st.n==="R"?"Retiro":"Paso "+st.n}: ${t.replace(/^¿|\?$/g,"")} – No`; (st.crit?fails:obs).push(lbl); } }));
+  EN.forEach(e=>{ need.push(e.k+".aplica"); if(state.a[e.k+".aplica"]==="Sí" && !tom) e.q.forEach(([q,t])=>{ need.push(e.k+"."+q); if(state.a[e.k+"."+q]==="No") fails.push(`${e.n}: ${t.replace(/^¿|\?$/g,"")} – No`); }); });
   if(state.certificado==="No") fails.push("Sin certificado LOTO asociado al trabajo");
   if(state.tipo==="No aplicado") fails.unshift("LOTO no aplicado en la intervención");
-  const missing = need.filter(k=>!state.a[k]).length + (state.certificado?0:1) + (state.tipo?0:1);
+  const missing = need.filter(k=>k.startsWith("p:") ? !state.p[k.slice(2)] : !state.a[k]).length + (state.certificado?0:1) + (state.tipo?0:1);
   const none = EN.every(e=>state.a[e.k+".aplica"]==="No");
-  if(none && missing===0) fails.push("No se bloqueó ninguna energía");
+  if(none && missing===0 && !tom) fails.push("No se bloqueó ninguna energía");
   const res = fails.length ? "No conforme" : (missing ? null : "Conforme");
-  return {res, fails, missing};
+  return {res, fails, obs, missing};
 }
 function render(){
-  $("planta").value=state.planta; fillEquipos(); $("otroWrap").hidden = state.tag!=="__otro"; $("otro").value=state.otro;
+  normalize();
+  $("planta").value=state.planta; fillEquipos(); $("otroWrap").hidden = state.tag!=="__otro"; $("otro").value=state.otro; $("otroTag").value=state.otroTag||"";
   ["fecha","auditor","turno","tarea","origen","comentarios","hallazgo","accion","responsable","compromiso"].forEach(id=>$(id).value=state[id]||"");
   document.querySelectorAll("#tipo button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===state.tipo));
   document.querySelectorAll('[data-k="certificado"] button').forEach(b=>b.setAttribute("aria-pressed", b.dataset.v===state.certificado));
   const m=machine();
   $("minfo").innerHTML = m ? `<span class="chip mono">${m[1]}</span>${m[3]===1?'<span class="chip bad">Crítico alto</span>':'<span class="chip">Crítico medio/bajo</span>'}<span class="chip ${m[4]?"ok":"bad"}">Modo de operación ${m[4]?"documentado":"sin documentar"}</span>` : "";
-  renderEnergies(); renderPhotos(); renderResult();
+  renderSteps(); renderEnergies(); renderPhotos(); renderResult();
 }
 function renderResult(){
   const r=compute(), el=$("res");
   el.className="res"+(r.res==="Conforme"?" ok":r.res==="No conforme"?" bad":""); el.textContent = r.res || (r.missing?`Faltan ${r.missing}`:"Pendiente");
   $("hdr").textContent = [state.planta, equipoName()].filter(Boolean).join(" · ") || "Bloqueo y etiquetado por máquina";
-  $("ncWrap").hidden = r.res!=="No conforme";
-  $("fallas").innerHTML = r.fails.map(f=>`<li>${f.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}</li>`).join("");
+  $("ncWrap").hidden = r.res!=="No conforme" && !r.obs.length;
+  $("fallas").innerHTML = [...r.fails, ...r.obs.map(o=>"Observación – "+o)].map(f=>`<li>${f.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}</li>`).join("");
 }
 document.addEventListener("click",e=>{
   const b=e.target.closest(".seg button"); if(!b) return;
   const seg=b.parentElement;
   if(seg.id==="tipo"){ state.tipo=b.dataset.v; }
   else if(seg.dataset.k==="certificado"){ state.certificado=b.dataset.v; }
+  else if(seg.dataset.p){ state.p[seg.dataset.p]=b.dataset.v; seg.closest(".en").dataset.st=stepStatus(STEPS.find(st=>st.q.some(([k])=>k===seg.dataset.p))); }
   else { state.a[seg.dataset.k]=b.dataset.v; }
   seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed", x===b));
   if(seg.dataset.k && seg.dataset.k.startsWith("") && seg.closest("#energies")) renderEnergies();
@@ -267,7 +302,8 @@ document.addEventListener("click",e=>{
 });
 $("planta").addEventListener("change",()=>{ state.planta=$("planta").value; state.tag=""; state.a={}; render(); saveDraft(); });
 $("equipo").addEventListener("change",()=>{ state.tag=$("equipo").value; presetAplica(); render(); saveDraft(); });
-["fecha","auditor","turno","tarea","origen","comentarios","hallazgo","accion","responsable","compromiso","otro"].forEach(id=>$(id).addEventListener("input",()=>{ state[id]=$(id).value; if(id==="otro") renderResult(); saveDraft(); }));
+["fecha","auditor","turno","tarea","origen","comentarios","hallazgo","accion","responsable","compromiso","otro","otroTag"].forEach(id=>$(id).addEventListener("input",()=>{ state[id]=$(id).value; if(id==="otro") renderResult(); saveDraft(); }));
+$("origen").addEventListener("change",()=>{ state.origen=$("origen").value; renderSteps(); renderEnergies(); renderResult(); saveDraft(); });
 
 /* ---------- fotos ---------- */
 function shrink(file){ return new Promise((res,rej)=>{ const img=new Image(); const u=URL.createObjectURL(file); img.onload=()=>{ const m=1280, sc=Math.min(1,m/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); res(c.toDataURL("image/jpeg",.78)); }; img.onerror=()=>rej(); img.src=u; }); }
@@ -284,7 +320,7 @@ function check(){
   if(!state.planta){ toast("Elige la planta"); $("planta").focus(); return null; }
   if(!state.tag || (state.tag==="__otro" && !state.otro.trim())){ toast("Elige el equipo"); $("equipo").focus(); return null; }
   if(!r.res){ toast(`Faltan ${r.missing} respuestas`); return null; }
-  if(r.res==="No conforme" && (!state.hallazgo.trim()||!state.accion.trim()||!state.responsable.trim())){ toast("Un No conforme necesita hallazgo, acción y responsable"); $("hallazgo").focus(); return null; }
+  if(r.res==="No conforme" && (!state.hallazgo.trim()||!state.accion.trim()||!state.responsable.trim()||!state.compromiso)){ toast("Un No conforme necesita hallazgo, acción, responsable y fecha de cierre"); $(!state.hallazgo.trim()?"hallazgo":!state.accion.trim()?"accion":!state.responsable.trim()?"responsable":"compromiso").focus(); return null; }
   return r;
 }
 function fileBase(){ return [state.planta, equipoName(), state.fecha].join("_").replace(/[^\wÁÉÍÓÚáéíóúÑñ-]+/g,"_"); }
@@ -313,16 +349,24 @@ async function buildPdf(r){
     didParseCell:d=>{ if(d.row.index===6&&d.column.index===1){ d.cell.styles.fontStyle="bold"; d.cell.styles.textColor=r.res==="Conforme"?GREEN:RED; } }});
   y=doc.lastAutoTable.finalY+7;
   const head=(t)=>{ doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(10.5); doc.text(t,M,y); y+=2; };
+  head("5 pasos LOTO");
+  const sb=[]; if(isTom()) sb.push(["–","Revisión documental (TOM): pasos no observados en terreno","No observado"]);
+  else STEPS.forEach(st=>st.q.forEach(([k,t],i)=>sb.push([i?"":(st.n==="R"?"Retiro":"Paso "+st.n+" · "+st.t), t, state.p[k]||"-"])));
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:8.5,cellPadding:1.6},headStyles:{fillColor:NAVY},head:[["Paso","Pregunta","Respuesta"]],body:sb,
+    columnStyles:{0:{cellWidth:38,fontStyle:"bold"},2:{cellWidth:24,halign:"center",fontStyle:"bold"}},
+    didParseCell:d=>{ if(d.section==="body"&&d.column.index===2){ d.cell.styles.textColor=d.cell.raw==="No"?RED:d.cell.raw==="Sí"?GREEN:[90,90,90]; } }});
+  y=doc.lastAutoTable.finalY+7;
+  if(y>250){doc.addPage(); y=20;}
   head("Verificación por energía");
-  const body=[]; EN.forEach(e=>{ const ap=state.a[e.k+".aplica"]; body.push([e.n,"¿Aplica bloquear energía?",ap]); if(ap==="Sí") e.q.forEach(([q,t])=>body.push(["",t,state.a[e.k+"."+q]||"-"])); });
+  const body=[]; EN.forEach(e=>{ const ap=state.a[e.k+".aplica"]; body.push([e.n,"¿Aplica bloquear energía?",ap||"-"]); if(ap==="Sí" && !isTom()) e.q.forEach(([q,t])=>body.push(["",t,state.a[e.k+"."+q]||"-"])); });
   doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:8.5,cellPadding:1.6},headStyles:{fillColor:NAVY},head:[["Energía","Pregunta","Respuesta"]],body,
     columnStyles:{0:{cellWidth:24,fontStyle:"bold"},2:{cellWidth:22,halign:"center",fontStyle:"bold"}},
     didParseCell:d=>{ if(d.section==="body"&&d.column.index===2&&d.row.raw[1]!=="¿Aplica bloquear energía?"){ d.cell.styles.textColor=d.cell.raw==="No"?RED:GREEN; } }});
   y=doc.lastAutoTable.finalY+7;
-  if(r.res==="No conforme"){
+  if(r.res==="No conforme" || (r.obs&&r.obs.length)){
     if(y>240){doc.addPage(); y=20;} head("Hallazgo y acción");
     doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8,valign:"top"},headStyles:{fillColor:RED},
-      body:[["Fallas detectadas",r.fails.join("\n")],["Hallazgo",state.hallazgo],["Acción",state.accion],["Responsable",state.responsable],["Fecha compromiso",fmtDate(state.compromiso)||"-"]],columnStyles:{0:{cellWidth:45,fontStyle:"bold"}}});
+      body:[["Fallas detectadas",r.fails.join("\n")||"-"],["Observaciones",(r.obs||[]).join("\n")||"-"],["Hallazgo",state.hallazgo],["Acción",state.accion],["Responsable",state.responsable],["Fecha compromiso",fmtDate(state.compromiso)||"-"]],columnStyles:{0:{cellWidth:45,fontStyle:"bold"}}});
     y=doc.lastAutoTable.finalY+7;
   }
   if(state.comentarios){ if(y>255){doc.addPage(); y=20;} head("Comentarios del auditor"); y+=3; doc.setFont("helvetica","normal"); doc.setTextColor(30); doc.setFontSize(9); const ls=doc.splitTextToSize(state.comentarios,W-2*M); doc.text(ls,M,y); y+=ls.length*4.5+4; }
@@ -353,7 +397,7 @@ $("pdf").addEventListener("click",async()=>{ const r=check(); if(!r) return; con
 /* ---------- historial ---------- */
 async function saveToHist(r,quiet){
   if(!state.id) state.id=String(Date.now());
-  await DB.put("audits",state.id,{state:JSON.parse(JSON.stringify(state)),res:r.res,fails:r.fails,guardado:Date.now()});
+  await DB.put("audits",state.id,{state:JSON.parse(JSON.stringify(state)),res:r.res,fails:r.fails,obs:r.obs,guardado:Date.now()});
   saveDraft(); renderHist();
   $("saveStatus").textContent="Guardada en el historial ("+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})+"). Si cambias algo, vuelve a guardar.";
   if(!quiet) toast("Guardada en el historial");
@@ -379,10 +423,12 @@ $("csv").addEventListener("click",async()=>{
   let list=[]; try{ list=await DB.all("audits"); }catch(e){}
   if(!list.length){ toast("No hay auditorías en el historial"); return; }
   const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
-  const rows=[["Fecha","Planta","Origen","Equipo (TAG)","Descripción equipo","Auditor","Tarea / intervención","Energías que requería bloquear","Tipo LOTO aplicado","Certificado LOTO","Resultado","Hallazgo","Acción","Responsable","Fecha compromiso","Estado acción"]];
+  const rows=[["Fecha","Planta","Origen","Equipo (TAG)","Descripción equipo","Auditor","Tarea / intervención","Energías que requería bloquear","Tipo LOTO aplicado","Certificado LOTO","Resultado","Hallazgo","Acción","Responsable","Fecha compromiso","Estado acción","Turno","Paso 1 Preparar y avisar","Paso 2 Detener y aislar","Paso 3 Bloquear y etiquetar","Paso 4 Energía residual","Paso 5 Verificar","Retiro del bloqueo","Observaciones"]];
   list.sort((a,b)=>(a.state.fecha||"").localeCompare(b.state.fecha||"")).forEach(v=>{ const s=v.state, m=byTag[s.tag];
     const en=EN.filter(e=>s.a[e.k+".aplica"]==="Sí").map(e=>e.n).join(", ");
-    rows.push([fmtDate(s.fecha).replace(/-/g,"/"),s.planta,s.origen,m?m[1]:"",m?m[2]:(s.otro||""),s.auditor,s.tarea,en,s.tipo,s.certificado,v.res,s.hallazgo,s.accion,s.responsable,fmtDate(s.compromiso).replace(/-/g,"/"),v.res==="No conforme"?"Abierta":""]); });
+    const org=(!s.origen||s.origen==="Terreno")?"Visita en terreno":s.origen, tom=org==="Revisión TOM", p=s.p||{};
+    const pasos=STEPS.map(st=>{ if(tom) return "No observado"; const sv=stepVal(st,p); if(st.n==="R" && st.q.every(([k])=>p[k]==="No observado")) return "No observado"; return sv; });
+    rows.push([fmtDate(s.fecha).replace(/-/g,"/"),s.planta,org,m?m[1]:(s.otroTag||"").trim().toUpperCase(),m?m[2]:(s.otro||""),s.auditor,s.tarea,en,s.tipo,s.certificado,v.res,s.hallazgo,s.accion,s.responsable,fmtDate(s.compromiso).replace(/-/g,"/"),(v.res==="No conforme"||(s.accion||"").trim())?"Abierta":"",s.turno,...pasos,(v.obs||[]).join(" | ")]); });
   download(new Blob(["﻿"+rows.map(r=>r.map(esc).join(";")).join("\r\n")],{type:"text/csv"}),`Auditorias_LOTO_${today()}.csv`); toast("Archivo descargado");
 });
 $("reset").addEventListener("click",()=>{ $("resetConfirm").hidden=false; });
