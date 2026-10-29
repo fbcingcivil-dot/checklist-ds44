@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#16305C">
+<title>Auditoría EPP</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="../icon-192.png">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<style>
+/* Layout: una columna para el celular, barra superior fija con el % de cumplimiento, mismo sistema visual que Auditoría LOTO */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --fg:#152238; --muted:#5B6678; --line:#D9DFE8;
+  --brand:#16305C; --brand-soft:#E3EAF5; --teal:#1F8A8A; --tag:#C8102E;
+  --warn:#B26A00; --warn-soft:#FBEFD9; --ok:#1E7B45; --ok-soft:#E1F2E8; --bad:#B42828; --bad-soft:#F8E3E3; --na:#5B6678; --na-soft:#E8EBF0;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --radius:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4; --tag:#F05A6E;
+  --warn:#F0B35A; --warn-soft:#3A2C12; --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1522; --surface:#172133; --fg:#E7ECF4; --muted:#9AA6B8; --line:#2A3850;
+  --brand:#8FB2EA; --brand-soft:#1E2D47; --teal:#5CC4C4; --tag:#F05A6E;
+  --warn:#F0B35A; --warn-soft:#3A2C12; --ok:#5CCB8A; --ok-soft:#163323; --bad:#F08080; --bad-soft:#3A1C1F; --na:#9AA6B8; --na-soft:#232F42; color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4}
+[hidden]{display:none!important}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;align-items:center;gap:12px}
+.logo{height:30px;width:auto;flex:none;background:#fff;border-radius:4px;padding:2px 4px}
+.ttl{flex:1;min-width:0}
+.ttl b{font-family:var(--display);font-size:20px;letter-spacing:.02em;color:var(--brand);display:block;line-height:1.05}
+.ttl span{font-size:13px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res{flex:none;font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border-radius:6px;background:var(--na-soft);color:var(--na)}
+.res.ok{background:var(--ok-soft);color:var(--ok)} .res.warn{background:var(--warn-soft);color:var(--warn)} .res.bad{background:var(--bad-soft);color:var(--bad)}
+.tagline{height:4px;background:var(--tag)}
+h2{font-family:var(--display);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:grid;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:420px){.grid2{grid-template-columns:1fr}}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600;min-width:0}
+input,select,textarea{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:64px}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--teal);outline-offset:1px}
+.span2{grid-column:1/-1}
+.chip{white-space:nowrap;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--na-soft);color:var(--na)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.warn{background:var(--warn-soft);color:var(--warn)}
+.en{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:var(--radius);padding:12px;display:grid;gap:10px}
+.en[data-st="ok"]{border-left-color:var(--ok)} .en[data-st="warn"]{border-left-color:var(--warn)} .en[data-st="bad"]{border-left-color:var(--bad)} .en[data-st="na"]{border-left-color:var(--na)}
+.en h3{margin:0;font-family:var(--display);font-size:19px;color:var(--brand);display:flex;align-items:center;gap:8px}
+.q{display:grid;gap:6px}
+.q p{margin:0;font-weight:600;font-size:15px}
+.note{margin:0;font-size:13px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.seg button{font:inherit;font-weight:600;font-size:15px;padding:11px 4px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;min-height:46px}
+.seg button[aria-pressed="true"][data-v="Sí"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.seg button[aria-pressed="true"][data-v="No"]{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.seg3{grid-template-columns:1fr 1fr 1fr}
+.seg3 button{line-height:1.15}
+.seg3 button small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
+.seg3 button[aria-pressed="true"]{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}
+.multi{display:flex;flex-wrap:wrap;gap:6px}
+.multi button{font:inherit;font-size:14px;font-weight:600;padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.multi button[aria-pressed="true"]{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.cnt{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding-top:10px;border-top:1px solid var(--line)}
+.cnt:first-child{border-top:0;padding-top:0}
+.cnt p{margin:0;font-weight:600;font-size:15px}
+.cnt p small{display:block;font-weight:500;font-size:13px;color:var(--muted)}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:44px;height:46px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-size:22px;font-weight:600;cursor:pointer;line-height:1}
+.step input{width:64px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;padding:10px 4px}
+.step.off input,.step.off button{opacity:.35}
+.nat{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);font-weight:600}
+.nat button{font:inherit;font-size:13px;font-weight:700;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.nat button[aria-pressed="true"]{background:var(--na-soft);border-color:var(--na);color:var(--fg)}
+.pct{font-variant-numeric:tabular-nums}
+.sum{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:420px){.sum{grid-template-columns:1fr 1fr}}
+.sum div{background:var(--bg);border-radius:8px;padding:8px;text-align:center}
+.sum b{display:block;font-family:var(--display);font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+.sum span{font-size:12px;color:var(--muted)}
+.sum .ok b{color:var(--ok)} .sum .warn b{color:var(--warn)} .sum .bad b{color:var(--bad)}
+.photos{display:flex;gap:6px;flex-wrap:wrap}
+.photos figure{margin:0;position:relative}
+.photos img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--line);display:block}
+.photos button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:none;background:var(--bad);color:#fff;font-weight:700;cursor:pointer;line-height:1}
+.lnk{font:inherit;font-size:14px;font-weight:600;color:var(--brand);background:none;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;cursor:pointer}
+.status{font-size:13px;color:var(--muted);margin:0}
+.btns{display:grid;gap:8px}
+.btn{font:inherit;font-weight:700;font-size:16px;padding:13px;border-radius:9px;border:1px solid var(--brand);background:var(--brand);color:var(--surface);cursor:pointer}
+.btn.sec{background:transparent;color:var(--brand)}
+.btn:disabled{opacity:.5;cursor:default}
+.hist{display:grid;gap:8px}
+.item2{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:stretch}
+.hist .open{font:inherit;text-align:left;display:flex;justify-content:space-between;gap:10px;align-items:center;width:100%;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.hist .del{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--bad);border-radius:8px;padding:0 10px;cursor:pointer}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;font-weight:600;z-index:20;max-width:calc(100% - 32px)}
+.confirm{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+.install{margin-top:14px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="in">
+    <img class="logo" src="../logo.png" alt="Elis">
+    <div class="ttl"><b>AUDITORÍA EPP</b><span id="hdr">Uso de EPP por planta y área</span></div>
+    <div class="res" id="res">Pendiente</div>
+  </div>
+  <div class="tagline"></div>
+</header>
+
+<main class="wrap">
+  <button class="btn sec install" id="install" type="button" hidden>Instalar como app en este teléfono</button>
+
+  <h2>Datos de la auditoría</h2>
+  <div class="panel">
+    <div class="grid2">
+      <label class="f">Planta<select id="planta"></select></label>
+      <label class="f">Fecha<input id="fecha" type="date"></label>
+      <label class="f span2">Área auditada<select id="area"></select></label>
+      <label class="f span2" id="areaOtroWrap" hidden>Nombre del área<input id="areaOtro" type="text" autocomplete="off" placeholder="Ej.: bodega de químicos"></label>
+      <label class="f span2">Nombre del auditor<select id="auditor"></select></label>
+      <label class="f span2" id="auditorOtroWrap" hidden>Escribe tu nombre<input id="auditorOtro" type="text" autocomplete="name"></label>
+    </div>
+    <div class="q"><p>Turno</p><div class="seg seg3" id="turno">
+      <button type="button" data-v="AM (06:00 a 11:59)" aria-pressed="false">AM<small>06:00–11:59</small></button>
+      <button type="button" data-v="PM (12:00 a 20:59)" aria-pressed="false">PM<small>12:00–20:59</small></button>
+      <button type="button" data-v="Nocturno (21:00 a 23:59)" aria-pressed="false">Nocturno<small>21:00–23:59</small></button></div></div>
+  </div>
+
+  <h2>Conteo en terreno</h2>
+  <p class="status" style="margin-bottom:10px">Cuenta a las personas presentes en el área al momento de la auditoría. Usa «NA» solo si en esa área no se requiere ese EPP.</p>
+  <div class="en" id="cntEpp"><h3>Uso de EPP</h3><div id="cntA" style="display:grid;gap:10px"></div></div>
+  <div class="en" id="cntConducta" style="margin-top:10px"><h3>Conductas a corregir</h3><div id="cntB" style="display:grid;gap:10px"></div></div>
+
+  <h2>Resumen</h2>
+  <div class="panel"><div class="sum" id="sum"></div></div>
+
+  <h2>Estado del EPP</h2>
+  <div class="panel">
+    <div class="q"><p>¿Observaste EPP en mal estado o deteriorado?</p><div class="seg" data-k="mal">
+      <button type="button" data-v="Sí" aria-pressed="false">Sí</button><button type="button" data-v="No" aria-pressed="false">No</button></div></div>
+    <div class="q" id="tiposWrap" hidden><p>¿Qué EPP estaba en mal estado o deteriorado? <span class="note">Puedes marcar varios</span></p><div class="multi" id="tipos"></div></div>
+    <div><button class="lnk" id="addFoto" type="button">Agregar foto (EPP, área o conducta)</button><input type="file" id="foto" accept="image/*" capture="environment" hidden></div>
+    <div class="photos" id="photos"></div>
+  </div>
+
+  <h2>Retroalimentación</h2>
+  <div class="panel">
+    <label class="f">¿Se realizó una retroalimentación positiva de lo observado?<textarea id="retro" placeholder="Qué se reconoció y qué se reforzó con el equipo"></textarea></label>
+    <p class="status">Da el feedback siempre en positivo para fomentar nuestra cultura de trabajo.</p>
+  </div>
+
+  <div id="accWrap" hidden>
+    <h2>Acción correctiva</h2>
+    <div class="panel">
+      <ul class="status" id="desvios" style="padding-left:18px;margin:0"></ul>
+      <label class="f">Acción<textarea id="accion" placeholder="Ej.: reposición de cofias en Calandras, charla de 5 minutos sobre celulares"></textarea></label>
+      <div class="grid2">
+        <label class="f">Responsable<input id="responsable" type="text" placeholder="Cargo o nombre"></label>
+        <label class="f">Fecha compromiso<input id="compromiso" type="date"></label>
+      </div>
+      <p class="status">Opcional. Si la llenas, sale en el informe y en el CSV como acción abierta.</p>
+    </div>
+  </div>
+
+  <h2>Enviar y guardar</h2>
+  <div class="panel">
+    <div class="btns">
+      <button class="btn" id="share" type="button">Compartir informe PDF</button>
+      <button class="btn sec" id="save" type="button">Guardar en el historial</button>
+      <button class="btn sec" id="pdf" type="button">Descargar informe PDF</button>
+      <button class="btn sec" id="reset" type="button">Nueva auditoría</button>
+      <div class="confirm" id="resetConfirm" hidden>¿Empezar una nueva? Lo no guardado en el historial se pierde.
+        <button class="lnk" id="resetYes" type="button">Sí, empezar de nuevo</button>
+        <button class="lnk" id="resetNo" type="button">Cancelar</button>
+      </div>
+    </div>
+    <p class="status" id="saveStatus">Todo queda guardado en este teléfono mientras llenas, aunque no haya señal.</p>
+  </div>
+
+  <h2>Historial en este teléfono</h2>
+  <div class="hist" id="hist"></div>
+  <div class="btns" style="margin-top:10px">
+    <button class="btn sec" id="csv" type="button">Exportar historial para el Excel (CSV)</button>
+  </div>
+  <p class="status" style="margin-top:6px">Las columnas A a P del CSV siguen el mismo orden de las preguntas del Forms «AUDITORÍA EPP»; desde la Q vienen los porcentajes de cumplimiento y la acción. Envíalo a QHSE para consolidar.</p>
+</main>
+
+<script src="../jspdf.umd.min.js"></script>
+<script src="../jspdf.plugin.autotable.min.js"></script>
+<script>
+const AUDITORES=["Justina Colamar","Fabiola Bravo","Francisco Bravo","Ignacio Durán","Juan Carlos Fernandez","Nelson Zamora","Nicolás Navarro","Alejandro Chacon","Alexis Monzon","Alicia Calvo","Alvaro Bustamante","Ana Gomez","Andres Vicente","Ariel Gaete","Boris Zapata","Carlos Oyarzo","Carlos Vargas","Carolans Calquin","Carolina Contreras","Daniel Celis","Danny Hidalgo","Dennise Zambrano","Dulka Fernandez","Edgardo Fuentes","Edgardo Henriquez","Emilio Astudillo","Estefania Marchant","Fernanda Arriagada","Guillermina Fuentes","Hector Tur","Ines Figueroa","Jaime Retamal","Jairo Varas","Javier Escobar","Jenny Gamboa","Jessica Oñate","Jonathan Soto","Jorge Silva","Jose Alday","Juan Carlos Alvarez","Juana Quevedo","Maria Vidal","Marjorie Kesser","Marta Ibañez","Martha Riera","Nicanor Cerecera","Nicol Muñoz","Pablo Gaete","Patricia Torres","Rebeca Barrios","Rodrigo Esparza","Rosa Salvo","Rosario Neira","Ruth Flores","Sebastian Garcia","Silvana Garcia","Veronica Cares","Xiemana Barrales","Ximena Barrios","Yhon Escobar","Yuti Maureira"];
+const PLANTAS=["Calama","Valparaíso","San Francisco Mostazal","Juan Elías","Santa Margarita","Cerrillos","Concepción","Temuco","Puerto Montt"];
+const AREAS=["Caldera","Área Sucia","Secadores","Calandras","Doblado","Despacho","Mantenimiento/Ingeniería","Desmanche","Costura","Administración/Comercial","Transportes","Toda la Planta"];
+const TIPOS=["Cofia","Calzado","Protector auditivo","Guantes","Elementos para soldar (careta, ropa, guantes)","Arnés de seguridad","Cuerda de vida"];
+/* k: clave · t: pregunta · s: nota · epp: cuenta para cumplimiento · na: admite NA · lbl: texto corto para PDF/CSV */
+const EPP=[
+  {k:"cofia",   t:"¿Cuántas personas usan cofia?",               s:"En planta todos deben usar cofia",          lbl:"Cofia"},
+  {k:"zapatos", t:"¿Cuántas usan zapatos de seguridad?",                                                        lbl:"Zapatos de seguridad"},
+  {k:"auditiva",t:"¿Cuántas usan protección auditiva cuando se requiere?", na:true,                           lbl:"Protección auditiva"},
+  {k:"guantes", t:"¿Cuántas usan guantes/mascarilla cuando se requiere?",  na:true,                           lbl:"Guantes/mascarilla"}
+];
+const COND=[
+  {k:"audifonos",t:"¿Cuántas personas usan audífonos?",          lbl:"Personas con audífonos"},
+  {k:"celular",  t:"¿Cuántas personas usan celular?",            lbl:"Personas con celular"},
+  {k:"comida",   t:"¿En cuántos puestos hay comida o bebestibles?", s:"Cuenta puestos, no personas", lbl:"Puestos con comida o bebestibles"}
+];
+const $=id=>document.getElementById(id);
+const escH=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- almacenamiento local (IndexedDB) ---------- */
+const DB=(()=>{ let p; const open=()=>p||(p=new Promise((res,rej)=>{ const r=indexedDB.open("epp",1); r.onupgradeneeded=()=>{ r.result.createObjectStore("kv"); r.result.createObjectStore("audits"); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }));
+  const tx=(store,mode,fn)=>open().then(db=>new Promise((res,rej)=>{ const t=db.transaction(store,mode); const s=t.objectStore(store); const out=fn(s); t.oncomplete=()=>res(out&&out.result); t.onerror=()=>rej(t.error); }));
+  return { get:(st,k)=>tx(st,"readonly",s=>s.get(k)), put:(st,k,v)=>tx(st,"readwrite",s=>s.put(v,k)), del:(st,k)=>tx(st,"readwrite",s=>s.delete(k)), all:st=>tx(st,"readonly",s=>s.getAll()) }; })();
+
+function today(){ const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function fmtDate(s){ if(!s) return ""; const [y,m,d]=s.split("-"); return `${d}-${m}-${y}`; }
+function lastGet(k){ try{ return localStorage.getItem(k)||""; }catch(e){ return ""; } }
+function blank(){ return {id:null, planta:lastGet("epp-planta"), fecha:today(), area:"", areaOtro:"", auditor:lastGet("epp-auditor"), auditorOtro:lastGet("epp-auditor-otro"), turno:"", n:{}, na:{}, mal:"", tipos:[], retro:"", accion:"", responsable:"", compromiso:"", fotos:[]}; }
+let state=blank();
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.setAttribute("role","status"); t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
+let draftT; function saveDraft(){ clearTimeout(draftT); draftT=setTimeout(()=>{ DB.put("kv","draft",state).catch(()=>{}); try{ localStorage.setItem("epp-auditor",state.auditor||""); localStorage.setItem("epp-auditor-otro",state.auditorOtro||""); localStorage.setItem("epp-planta",state.planta||""); }catch(e){} },300); }
+const auditorName=s=>(s.auditor==="__otro"?(s.auditorOtro||"").trim():s.auditor)||"";
+const areaName=s=>(s.area==="__otro"?(s.areaOtro||"").trim():s.area)||"";
+const lvl=p=>p==null?"na":p>=95?"ok":p>=80?"warn":"bad";
+
+/* ---------- cálculo ---------- */
+function compute(s){
+  s=s||state; const n=s.n||{}, na=s.na||{}, P=n.personas;
+  const pct={}; let okN=0, okD=0; const errs=[];
+  EPP.forEach(e=>{ if(na[e.k]){ pct[e.k]=null; return; } const v=n[e.k]; if(v==null||P==null) { pct[e.k]=undefined; return; }
+    if(v>P) errs.push(`${e.lbl}: ${v} es mayor que las ${P} personas del área`);
+    pct[e.k]=P>0?Math.round(v/P*100):null; if(P>0){ okN+=v; okD+=P; } });
+  COND.slice(0,2).forEach(c=>{ if(n[c.k]!=null&&P!=null&&n[c.k]>P) errs.push(`${c.lbl}: ${n[c.k]} es mayor que las ${P} personas del área`); });
+  const glob=okD?Math.round(okN/okD*100):null;
+  const cond=COND.reduce((a,c)=>a+(n[c.k]||0),0);
+  let missing=0;
+  ["planta","fecha","turno"].forEach(k=>{ if(!s[k]) missing++; }); if(!areaName(s)) missing++; if(!auditorName(s)) missing++;
+  if(n.personas==null) missing++;
+  EPP.forEach(e=>{ if(!na[e.k]&&n[e.k]==null) missing++; }); COND.forEach(c=>{ if(n[c.k]==null) missing++; });
+  if(!s.mal) missing++; else if(s.mal==="Sí"&&!(s.tipos||[]).length) missing++;
+  if(!(s.retro||"").trim()) missing++;
+  const desv=[];
+  EPP.forEach(e=>{ if(pct[e.k]!=null&&pct[e.k]<100) desv.push(`${e.lbl}: ${P-n[e.k]} de ${P} sin usar (${pct[e.k]}%)`); });
+  COND.forEach(c=>{ if(n[c.k]>0) desv.push(`${c.lbl}: ${n[c.k]}`); });
+  if(s.mal==="Sí") desv.push("EPP en mal estado: "+(s.tipos||[]).join(", "));
+  return {pct, glob, cond, missing, errs, desv, P};
+}
+
+/* ---------- formulario ---------- */
+function opts(sel,list,ph,other){ sel.textContent=""; const add=(v,t)=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o); }; add("",ph); list.forEach(v=>add(v,v)); if(other) add("__otro","Otro (no está en la lista)"); }
+opts($("planta"),PLANTAS,"Elegir…"); opts($("area"),AREAS,"Elegir área…",true); opts($("auditor"),AUDITORES,"Elegir…",true);
+$("tipos").innerHTML=TIPOS.map(t=>`<button type="button" data-t="${escH(t)}" aria-pressed="false">${escH(t)}</button>`).join("");
+function cntRow(c){ return `<div class="cnt"><p>${escH(c.t)}${c.s?`<small>${escH(c.s)}</small>`:""}<small class="pct" id="pct-${c.k}"></small></p>
+  <div style="display:grid;gap:6px;justify-items:end"><div class="step" id="st-${c.k}"><button type="button" data-k="${c.k}" data-d="-1" aria-label="Restar uno">−</button><input type="number" inputmode="numeric" min="0" step="1" id="n-${c.k}" aria-label="${escH(c.t)}"><button type="button" data-k="${c.k}" data-d="1" aria-label="Sumar uno">+</button></div>
+  ${c.na?`<div class="nat"><button type="button" data-na="${c.k}" aria-pressed="false">NA · no se requiere aquí</button></div>`:""}</div></div>`; }
+$("cntA").innerHTML=cntRow({k:"personas",t:"¿Cuántas personas hay en el área?",s:"Total presente al momento de la auditoría"})+EPP.map(cntRow).join("");
+$("cntB").innerHTML=COND.map(cntRow).join("");
+
+function render(){
+  $("planta").value=state.planta||""; $("fecha").value=state.fecha||""; $("area").value=state.area||""; $("areaOtro").value=state.areaOtro||"";
+  $("auditor").value=state.auditor||""; $("auditorOtro").value=state.auditorOtro||"";
+  $("areaOtroWrap").hidden=state.area!=="__otro"; $("auditorOtroWrap").hidden=state.auditor!=="__otro";
+  ["retro","accion","responsable","compromiso"].forEach(id=>$(id).value=state[id]||"");
+  document.querySelectorAll("#turno button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.turno));
+  document.querySelectorAll('[data-k="mal"] button').forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===state.mal));
+  document.querySelectorAll("#tipos button").forEach(b=>b.setAttribute("aria-pressed",(state.tipos||[]).includes(b.dataset.t)));
+  ["personas",...EPP.map(e=>e.k),...COND.map(c=>c.k)].forEach(k=>{ const v=state.n[k]; $("n-"+k).value=v==null?"":v; });
+  EPP.filter(e=>e.na).forEach(e=>{ const on=!!state.na[e.k]; $("st-"+e.k).classList.toggle("off",on); $("n-"+e.k).disabled=on; document.querySelector(`[data-na="${e.k}"]`).setAttribute("aria-pressed",on); });
+  renderPhotos(); renderResult();
+}
+function renderResult(){
+  const r=compute(), el=$("res");
+  $("tiposWrap").hidden=state.mal!=="Sí";
+  EPP.forEach(e=>{ const p=r.pct[e.k]; $("pct-"+e.k).textContent=p===null&&state.na[e.k]?"No aplica":p==null?"":`${p}% cumple`; });
+  $("cntEpp").dataset.st=r.glob==null?"":lvl(r.glob); $("cntConducta").dataset.st=COND.every(c=>state.n[c.k]!=null)?(r.cond?"bad":"ok"):"";
+  const cell=(v,l,c)=>`<div class="${c||""}"><b>${v}</b><span>${l}</span></div>`;
+  $("sum").innerHTML=cell(r.glob==null?"–":r.glob+"%","Cumplimiento EPP",r.glob==null?"":lvl(r.glob))+cell(r.P==null?"–":r.P,"Personas")+cell(r.cond,"Conductas a corregir",r.cond?"bad":"")+cell(state.mal||"–","EPP deteriorado",state.mal==="Sí"?"bad":state.mal==="No"?"ok":"");
+  el.className="res"+(r.missing||r.errs.length?"":" "+lvl(r.glob));
+  el.textContent=r.errs.length?"Revisar":r.missing?`Faltan ${r.missing}`:(r.glob==null?"Sin EPP":r.glob+"% EPP");
+  $("hdr").textContent=[state.planta,areaName(state)].filter(Boolean).join(" · ")||"Uso de EPP por planta y área";
+  $("accWrap").hidden=!r.desv.length;
+  $("desvios").innerHTML=r.desv.map(d=>`<li>${escH(d)}</li>`).join("");
+}
+document.addEventListener("click",e=>{
+  const st=e.target.closest(".step button");
+  if(st){ const k=st.dataset.k; if(state.na[k]) return; state.n[k]=Math.max(0,(state.n[k]||0)+ +st.dataset.d); $("n-"+k).value=state.n[k]; renderResult(); saveDraft(); return; }
+  const na=e.target.closest("[data-na]");
+  if(na){ const k=na.dataset.na; state.na[k]=!state.na[k]; if(state.na[k]) delete state.n[k]; render(); saveDraft(); return; }
+  const t=e.target.closest("#tipos button");
+  if(t){ const v=t.dataset.t; state.tipos=state.tipos.includes(v)?state.tipos.filter(x=>x!==v):[...state.tipos,v]; t.setAttribute("aria-pressed",state.tipos.includes(v)); renderResult(); saveDraft(); return; }
+  const b=e.target.closest(".seg button"); if(!b) return;
+  const seg=b.parentElement;
+  if(seg.id==="turno") state.turno=b.dataset.v;
+  else if(seg.dataset.k==="mal"){ state.mal=b.dataset.v; if(state.mal==="No") state.tipos=[]; document.querySelectorAll("#tipos button").forEach(x=>x.setAttribute("aria-pressed",state.tipos.includes(x.dataset.t))); }
+  seg.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  renderResult(); saveDraft();
+});
+document.addEventListener("input",e=>{
+  const id=e.target.id||"";
+  if(id.startsWith("n-")){ const k=id.slice(2), v=e.target.value; if(v===""||isNaN(+v)) delete state.n[k]; else state.n[k]=Math.max(0,Math.floor(+v)); renderResult(); saveDraft(); return; }
+  if(["planta","fecha","area","areaOtro","auditor","auditorOtro","retro","accion","responsable","compromiso"].includes(id)){ state[id]=e.target.value;
+    if(id==="area") $("areaOtroWrap").hidden=state.area!=="__otro"; if(id==="auditor") $("auditorOtroWrap").hidden=state.auditor!=="__otro";
+    renderResult(); saveDraft(); }
+});
+
+/* ---------- fotos ---------- */
+function shrink(file){ return new Promise((res,rej)=>{ const img=new Image(); const u=URL.createObjectURL(file); img.onload=()=>{ const m=1280, sc=Math.min(1,m/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*sc); c.height=Math.round(img.height*sc); c.getContext("2d").drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); res(c.toDataURL("image/jpeg",.78)); }; img.onerror=()=>rej(); img.src=u; }); }
+$("addFoto").addEventListener("click",()=>$("foto").click());
+$("foto").addEventListener("change",async()=>{ const f=$("foto").files[0]; $("foto").value=""; if(!f) return; try{ state.fotos.push(await shrink(f)); renderPhotos(); saveDraft(); }catch(e){ toast("No se pudo leer la foto"); } });
+function renderPhotos(){
+  const p=$("photos"); p.textContent="";
+  state.fotos.forEach((u,i)=>{ const fig=document.createElement("figure"); const img=document.createElement("img"); img.src=u; img.alt="Foto "+(i+1); const x=document.createElement("button"); x.type="button"; x.textContent="×"; x.setAttribute("aria-label","Quitar foto "+(i+1)); x.addEventListener("click",()=>{ state.fotos.splice(i,1); renderPhotos(); saveDraft(); }); fig.append(img,x); p.appendChild(fig); });
+}
+
+/* ---------- validación ---------- */
+function check(){
+  const r=compute();
+  if(!state.planta){ toast("Elige la planta"); $("planta").focus(); return null; }
+  if(!areaName(state)){ toast("Elige el área auditada"); $(state.area==="__otro"?"areaOtro":"area").focus(); return null; }
+  if(!auditorName(state)){ toast("Elige el nombre del auditor"); $(state.auditor==="__otro"?"auditorOtro":"auditor").focus(); return null; }
+  if(r.errs.length){ toast(r.errs[0]); return null; }
+  if(r.missing){ toast(`Faltan ${r.missing} respuestas`); return null; }
+  return r;
+}
+function fileBase(s){ s=s||state; return [s.planta, areaName(s), s.fecha].join("_").replace(/[^\wÁÉÍÓÚáéíóúÑñ-]+/g,"_"); }
+
+/* ---------- PDF ---------- */
+function download(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000); }
+let logoData=null;
+function loadLogo(){ return logoData?Promise.resolve(logoData):new Promise(res=>{ const i=new Image(); i.onload=()=>{ const c=document.createElement("canvas"); c.width=i.width; c.height=i.height; c.getContext("2d").drawImage(i,0,0); logoData=c.toDataURL("image/png"); res(logoData); }; i.onerror=()=>res(null); i.src="../logo.png"; }); }
+async function buildPdf(r,s,logo){
+  s=s||state; const {jsPDF}=window.jspdf; const doc=new jsPDF({unit:"mm",format:"a4"});
+  const W=210, M=14, NAVY=[22,48,92], RED=[180,40,40], GREEN=[30,123,69], AMBER=[178,106,0], GREY=[90,90,90]; const cx=M+34+(W-2*M-82)/2;
+  const col=p=>p==null?GREY:p>=95?GREEN:p>=80?AMBER:RED;
+  if(logo===undefined) logo=await loadLogo();
+  doc.setDrawColor(...NAVY); doc.setLineWidth(.3); doc.rect(M,10,W-2*M,22);
+  if(logo){ try{ doc.addImage(logo,"PNG",M+3,13,26,16); }catch(e){} }
+  doc.line(M+34,10,M+34,32); doc.line(W-M-48,10,W-M-48,32);
+  doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(9); doc.text("Área: QHSE & CSR",cx,15,{align:"center"});
+  doc.setFontSize(13); doc.text("INFORME AUDITORÍA EPP",cx,23,{align:"center"});
+  doc.setFontSize(8.5); doc.setFont("helvetica","normal"); doc.text("Uso de elementos de protección personal",cx,28,{align:"center"});
+  doc.setTextColor(30); doc.setFontSize(8); const rx=W-M-46;
+  doc.text(doc.splitTextToSize("Planta: "+s.planta,45)[0],rx,15); doc.text("Fecha: "+fmtDate(s.fecha)+" · "+(s.turno||"").split(" ")[0],rx,21); doc.text(doc.splitTextToSize("Auditor: "+(auditorName(s)||"-"),45)[0],rx,27);
+  let y=38;
+  const n=s.n||{}, P=n.personas;
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8},
+    body:[["Área auditada",areaName(s)],["Turno",s.turno],["Personas en el área",String(P)],["Cumplimiento de EPP",r.glob==null?"Sin EPP evaluable":r.glob+"%"],["Conductas a corregir",String(r.cond)],["EPP en mal estado",s.mal==="Sí"?"Sí: "+s.tipos.join(", "):"No"]],
+    columnStyles:{0:{cellWidth:45,fontStyle:"bold"}},
+    didParseCell:d=>{ if(d.column.index===1){ if(d.row.index===3){ d.cell.styles.fontStyle="bold"; d.cell.styles.textColor=col(r.glob); } if(d.row.index===4&&r.cond){ d.cell.styles.fontStyle="bold"; d.cell.styles.textColor=RED; } if(d.row.index===5&&s.mal==="Sí"){ d.cell.styles.fontStyle="bold"; d.cell.styles.textColor=RED; } } }});
+  y=doc.lastAutoTable.finalY+7;
+  const head=t=>{ doc.setFont("helvetica","bold"); doc.setTextColor(...NAVY); doc.setFontSize(10.5); doc.text(t,M,y); y+=2; };
+  head("Uso de EPP");
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8},headStyles:{fillColor:NAVY},
+    head:[["Elemento","Lo usan","Personas en el área","Cumplimiento"]],
+    body:EPP.map(e=>s.na&&s.na[e.k]?[e.lbl,"NA","–","No se requiere"]:[e.lbl,String(n[e.k]),String(P),r.pct[e.k]==null?"–":r.pct[e.k]+"%"]),
+    columnStyles:{1:{halign:"center",cellWidth:24},2:{halign:"center",cellWidth:38},3:{halign:"center",fontStyle:"bold",cellWidth:34}},
+    didParseCell:d=>{ if(d.section==="body"&&d.column.index===3){ d.cell.styles.textColor=col(r.pct[EPP[d.row.index].k]); } }});
+  y=doc.lastAutoTable.finalY+7;
+  head("Conductas a corregir");
+  doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8},headStyles:{fillColor:NAVY},
+    head:[["Observación","Cantidad"]],body:COND.map(c=>[c.lbl,String(n[c.k])]),
+    columnStyles:{1:{halign:"center",fontStyle:"bold",cellWidth:34}},
+    didParseCell:d=>{ if(d.section==="body"&&d.column.index===1) d.cell.styles.textColor=+d.cell.raw>0?RED:GREEN; }});
+  y=doc.lastAutoTable.finalY+7;
+  if(y>245){doc.addPage(); y=20;}
+  head("Retroalimentación positiva entregada"); y+=3;
+  doc.setFont("helvetica","normal"); doc.setTextColor(30); doc.setFontSize(9); const ls=doc.splitTextToSize(s.retro||"-",W-2*M);
+  ls.forEach(l=>{ if(y>275){doc.addPage(); y=20;} doc.text(l,M,y); y+=4.5; }); y+=4;
+  if((s.accion||"").trim()){
+    if(y>240){doc.addPage(); y=20;} head("Acción correctiva");
+    doc.autoTable({startY:y,margin:{left:M,right:M},theme:"grid",styles:{fontSize:9,cellPadding:1.8,valign:"top"},
+      body:[["Desviaciones",r.desv.join("\n")||"-"],["Acción",s.accion],["Responsable",s.responsable||"-"],["Fecha compromiso",fmtDate(s.compromiso)||"-"]],columnStyles:{0:{cellWidth:45,fontStyle:"bold"}}});
+    y=doc.lastAutoTable.finalY+7;
+  }
+  if(y>255){doc.addPage(); y=30;} else y+=14;
+  doc.setDrawColor(120); doc.setTextColor(60); doc.setFontSize(8.5); doc.setFont("helvetica","normal");
+  [["Auditor: "+auditorName(s),M+5],["Jefe de planta / área",W/2+10]].forEach(([l,x])=>{ doc.line(x,y,x+70,y); doc.text(doc.splitTextToSize(l,70)[0],x+35,y+4,{align:"center"}); });
+  if(s.fotos&&s.fotos.length){
+    doc.addPage(); y=18; head("Registro fotográfico"); y+=4;
+    const cw=(W-2*M-6)/2, ch=62; let c2=0;
+    s.fotos.forEach((u,i)=>{ if(y+ch+8>285){ doc.addPage(); y=18; c2=0; } const x=M+c2*(cw+6);
+      try{ const p=doc.getImageProperties(u); const sc=Math.min(cw/p.width,ch/p.height); doc.addImage(u,"JPEG",x+(cw-p.width*sc)/2,y,p.width*sc,p.height*sc); }catch(e){}
+      doc.setFontSize(8); doc.setTextColor(60); doc.text("Foto "+(i+1),x,y+ch+4); if(c2===1){ y+=ch+10; c2=0; } else c2=1; });
+  }
+  const pages=doc.getNumberOfPages(); for(let i=1;i<=pages;i++){ doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(120); doc.text(`Elis Chile · Auditoría EPP · Página ${i} de ${pages}`,W/2,290,{align:"center"}); }
+  return doc.output("blob");
+}
+$("share").addEventListener("click",async()=>{
+  const r=check(); if(!r) return; const b=$("share"); b.disabled=true;
+  try{ await saveToHist(r,true);
+    const blob=await buildPdf(r); const file=new File([blob],`Auditoria_EPP_${fileBase()}.pdf`,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:"Auditoría EPP – "+state.planta,text:`Auditoría EPP ${state.planta} · ${areaName(state)} · ${fmtDate(state.fecha)} · ${r.glob==null?"sin EPP evaluable":r.glob+"% cumplimiento"}`}); }
+    else { download(blob,file.name); toast("Tu teléfono no permite compartir directo: el PDF se descargó"); }
+  }catch(e){ if(!(e&&e.name==="AbortError")) toast("No se pudo generar el informe"); }
+  b.disabled=false;
+});
+$("pdf").addEventListener("click",async()=>{ const r=check(); if(!r) return; const b=$("pdf"); b.disabled=true; try{ download(await buildPdf(r),`Auditoria_EPP_${fileBase()}.pdf`); toast("Informe descargado"); }catch(e){ toast("No se pudo generar el informe"); } b.disabled=false; });
+
+/* ---------- historial ---------- */
+async function saveToHist(r,quiet){
+  if(!state.id) state.id=String(Date.now());
+  await DB.put("audits",state.id,{state:JSON.parse(JSON.stringify(state)),glob:r.glob,cond:r.cond,guardado:Date.now()});
+  saveDraft(); renderHist();
+  $("saveStatus").textContent="Guardada en el historial ("+new Date().toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})+"). Si cambias algo, vuelve a guardar.";
+  if(!quiet) toast("Guardada en el historial");
+}
+$("save").addEventListener("click",async()=>{ const r=check(); if(!r) return; try{ await saveToHist(r); }catch(e){ toast("No se pudo guardar. Puede que el teléfono esté sin espacio."); } });
+async function renderHist(){
+  const h=$("hist"); let list=[]; try{ list=await DB.all("audits"); }catch(e){}
+  list.sort((a,b)=>(b.state.fecha||"").localeCompare(a.state.fecha||"")||b.guardado-a.guardado); h.textContent="";
+  if(!list.length){ const p=document.createElement("p"); p.className="empty"; p.textContent="Aún no hay auditorías guardadas en este teléfono."; h.appendChild(p); return; }
+  list.forEach(v=>{
+    const s=v.state;
+    const row=document.createElement("div"); row.className="item2";
+    const b=document.createElement("button"); b.type="button"; b.className="open";
+    const l=document.createElement("span"); const st=document.createElement("strong"); st.textContent=areaName(s)||"Área"; const sm=document.createElement("span"); sm.className="status"; sm.style.display="block"; sm.textContent=`${s.planta} · ${fmtDate(s.fecha)}${auditorName(s)?" · "+auditorName(s):""}`; l.append(st,sm);
+    const c=document.createElement("span"); c.className="chip "+lvl(v.glob); c.textContent=v.glob==null?"Sin EPP":v.glob+"%"; b.append(l,c);
+    b.addEventListener("click",()=>{ state={...blank(),...JSON.parse(JSON.stringify(s))}; render(); saveDraft(); window.scrollTo({top:0}); toast("Abierta: "+st.textContent); });
+    const d=document.createElement("button"); d.type="button"; d.className="del"; d.textContent="Eliminar";
+    d.addEventListener("click",async()=>{ if(d.dataset.sure){ await DB.del("audits",s.id); if(state.id===s.id) state.id=null; renderHist(); toast("Eliminada"); } else { d.dataset.sure="1"; d.textContent="¿Seguro?"; setTimeout(()=>{ d.dataset.sure=""; d.textContent="Eliminar"; },3000); } });
+    row.append(b,d); h.appendChild(row);
+  });
+}
+$("csv").addEventListener("click",async()=>{
+  let list=[]; try{ list=await DB.all("audits"); }catch(e){}
+  if(!list.length){ toast("No hay auditorías en el historial"); return; }
+  const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const rows=[["Fecha","Nombre del Auditor","Turno","Planta","Área Auditada","Personas en el área","Usan cofia","Usan zapatos de seguridad","Usan protección auditiva","Usan guantes/mascarilla","Usan audífonos","Usan celular","Puestos con comida o bebestibles","EPP en mal estado","Qué EPP en mal estado","Retroalimentación positiva","% Cofia","% Zapatos","% Prot. auditiva","% Guantes/mascarilla","% Cumplimiento EPP","Conductas a corregir","Acción","Responsable","Fecha compromiso","Estado acción","Fotos"]];
+  list.sort((a,b)=>(a.state.fecha||"").localeCompare(b.state.fecha||"")).forEach(v=>{ const s=v.state, n=s.n||{}, r=compute(s);
+    const val=k=>s.na&&s.na[k]?"NA":n[k]; const pc=k=>r.pct[k]==null?(s.na&&s.na[k]?"NA":""):r.pct[k]+"%";
+    rows.push([fmtDate(s.fecha).replace(/-/g,"/"),auditorName(s),s.turno,s.planta,areaName(s),n.personas,n.cofia,n.zapatos,val("auditiva"),val("guantes"),n.audifonos,n.celular,n.comida,s.mal==="Sí"?"SI":"NO",(s.tipos||[]).join("; "),s.retro,pc("cofia"),pc("zapatos"),pc("auditiva"),pc("guantes"),r.glob==null?"":r.glob+"%",r.cond,s.accion,s.responsable,fmtDate(s.compromiso).replace(/-/g,"/"),(s.accion||"").trim()?"Abierta":"",(s.fotos||[]).length]); });
+  download(new Blob(["﻿"+rows.map(r=>r.map(esc).join(";")).join("\r\n")],{type:"text/csv"}),`Auditorias_EPP_${today()}.csv`); toast("Archivo descargado");
+});
+$("reset").addEventListener("click",()=>{ $("resetConfirm").hidden=false; });
+$("resetNo").addEventListener("click",()=>{ $("resetConfirm").hidden=true; });
+$("resetYes").addEventListener("click",()=>{ state=blank(); $("resetConfirm").hidden=true; render(); saveDraft(); window.scrollTo({top:0}); $("saveStatus").textContent="Todo queda guardado en este teléfono mientras llenas, aunque no haya señal."; toast("Auditoría nueva"); });
+
+/* ---------- instalación y modo sin conexión ---------- */
+let deferred=null;
+window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferred=e; $("install").hidden=false; });
+$("install").addEventListener("click",async()=>{ if(!deferred) return; deferred.prompt(); await deferred.userChoice; deferred=null; $("install").hidden=true; });
+window.addEventListener("appinstalled",()=>{ $("install").hidden=true; toast("App instalada"); });
+if("serviceWorker" in navigator){ const had=!!navigator.serviceWorker.controller; navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>r.update()).catch(()=>{}); navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(had && !window.__reloaded){ window.__reloaded=true; location.reload(); } }); }
+if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+
+/* ---------- inicio ---------- */
+render(); renderHist();
+DB.get("kv","draft").then(d=>{ if(d&&d.n){ state={...blank(),...d}; render(); if(state.id) $("saveStatus").textContent="Estás editando una auditoría del historial. Vuelve a guardar para actualizarla."; } }).catch(()=>{});
+</script>
+</body>
+</html>
